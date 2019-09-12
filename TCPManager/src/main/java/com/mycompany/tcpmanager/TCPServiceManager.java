@@ -8,7 +8,7 @@ package com.mycompany.tcpmanager;
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.util.Vector;
+import java.util.ArrayList;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -17,12 +17,12 @@ import java.util.logging.Logger;
  * @author sjdonado
  */
 public class TCPServiceManager extends Thread implements TCPServiceManagerCallerInterface {
-    private final int NUMBER_OF_THREADS = 1; // DEVELOPMENT ENV, FOR PROD ENV CHANGE TO 50
+    private final int NUMBER_OF_THREADS = 3; // DEVELOPMENT ENV, FOR PROD ENV CHANGE TO 50
     private ServerSocket serverSocket;
     private final int port;
     private final TCPServiceManagerCallerInterface caller;
     private final boolean isEnabled = true;
-    private Vector<TCPClientManager> clients = new Vector<>();
+    private final ArrayList<TCPClientManager> clients = new ArrayList<>();
     
     public TCPServiceManager(int port, TCPServiceManagerCallerInterface caller) {
         this.port = port;
@@ -33,7 +33,7 @@ public class TCPServiceManager extends Thread implements TCPServiceManagerCaller
     
     public void initializeThreads() {
         try {
-            for (int index=0; index < NUMBER_OF_THREADS; index++) {
+            for (int index = 0; index < NUMBER_OF_THREADS; index++) {
                 clients.add(new TCPClientManager(this));
             }
         } catch (Exception ex) {
@@ -42,7 +42,7 @@ public class TCPServiceManager extends Thread implements TCPServiceManagerCaller
         }
     }
     
-    public TCPClientManager getNotBusyClientSocketManager() {
+    public TCPClientManager getNotBusyTCPClientManager() {
         try {
             for (TCPClientManager current: this.clients) {
                 if (current != null) {
@@ -71,33 +71,35 @@ public class TCPServiceManager extends Thread implements TCPServiceManagerCaller
         try {
             this.serverSocket = new ServerSocket(port);
             while (this.isEnabled) {
-                clients.add(new TCPClientManager(serverSocket.accept(), this));
-//                Socket receivedSocket = serverSocket.accept();
-//                TCPClientManager freeClientSocketManager = getNotBusyClientSocketManager();
-//                Logger.getLogger(
-//                    TCPServiceManager.class.getName()).log(Level.INFO, "NEW CLIENT CONNECTED! ");
-//                
-//                if (freeClientSocketManager != null) {
-//                    freeClientSocketManager.assignSocketToThisThread(receivedSocket);
-//                } else {
-//                    try {
-//                        receivedSocket.close();
-//                    } catch(IOException error) {
-//                        this.caller.errorHasBeenThrown(error);
-//                    }
-//                }
+//                clients.add(new TCPClientManager(serverSocket.accept(), this));
+                Socket receivedSocket = serverSocket.accept();
+                TCPClientManager freeTCPClientManager = getNotBusyTCPClientManager();
+                if (freeTCPClientManager != null) {
+                    freeTCPClientManager.assignSocketToThisThread(receivedSocket);
+                } else {
+                    try {
+                        receivedSocket.close();
+                    } catch(IOException error) {
+                        this.caller.errorHasBeenThrown(error);
+                    }
+                }
             }
-        } catch (Exception error) {
+        } catch (IOException error) {
             this.caller.errorHasBeenThrown(error);
         }
     }
 
+//    TCPClientManager caller interface
     @Override
     public void messageReceivedFromClient(Socket clientSocket, byte[] data) {
-//        SendMessageToAllClients(
-//                                clientSocket.getInetAddress().
-//                                getHostName()+":"+clientSocket.getPort()
-//                                +": "+new String(data));
+        Logger.getLogger(TCPServiceManager.class.getName()).log(
+                Level.INFO,
+                "{0}:{1}=> {2}",new Object[]{
+                    clientSocket.getInetAddress().getHostName(),
+                    clientSocket.getPort(),
+                    new String(data)
+                }
+        );
     }
     
     @Override

@@ -34,7 +34,6 @@ public class TCPClientManager extends Thread {
     private BufferedReader printReader;
     private BufferedInputStream reader;
     private BufferedOutputStream writer;
-
     private final Object mutex = new Object();
 
     public void waitForAWhile(){
@@ -42,7 +41,7 @@ public class TCPClientManager extends Thread {
             synchronized(mutex) {
                 mutex.wait();
             }
-        } catch (Exception ex) {    
+        } catch (InterruptedException ex) {    
             Logger.getLogger(
                     TCPClientManager.class.getName()).log(Level.SEVERE, null, ex);            
         }
@@ -58,19 +57,21 @@ public class TCPClientManager extends Thread {
                     TCPClientManager.class.getName()).log(Level.SEVERE, null, ex);   
         }
     }
-        
+   
+//    TCPServiceManager connectio
     public TCPClientManager(TCPServiceManagerCallerInterface caller) {
         this.caller = caller;            
         this.start();            
     }
     
-    public TCPClientManager(Socket clientSocket,
-            TCPServiceManagerCallerInterface caller) {
-        this.clientSocket = clientSocket;
-        this.caller = caller;
-        this.start();
-    }
+//    public TCPClientManager(Socket clientSocket,
+//            TCPServiceManagerCallerInterface caller) {
+//        this.clientSocket = clientSocket;
+//        this.caller = caller;
+//        this.start();
+//    }
 
+//    GUI connection
     public TCPClientManager(String serverIpAddress, int port, 
             TCPServiceManagerCallerInterface caller) {
         this.serverIpAdress = serverIpAddress;
@@ -114,7 +115,7 @@ public class TCPClientManager extends Thread {
                     new OutputStreamWriter(clientSocket.getOutputStream()), true);
 
             return true;
-        } catch (Exception ex) {
+        } catch (IOException ex) {
             caller.errorHasBeenThrown(ex);
         }
         return false;
@@ -124,18 +125,13 @@ public class TCPClientManager extends Thread {
     public void run() {
         try {
             while (this.isEnabled) {
-//                if(this.clientSocket == null) {
-//                    this.waitForAWhile();
-//                }
+                if(this.clientSocket == null && this.serverIpAdress == null) {
+                    this.waitForAWhile();
+                }
                 if (initializeStreams()) {
-                    String message;
                     sendMessage("Successful connection");
+                    String message;
                     while((message = this.printReader.readLine()) != null) {
-                       Logger.getLogger(
-                            TCPClientManager.class.getName()).log(
-                                Level.INFO,
-                                this.clientSocket.getInetAddress().getHostAddress() + ": " + message
-                        );
                        this.caller.messageReceivedFromClient(clientSocket, message.getBytes());
                     }
                     
@@ -160,9 +156,9 @@ public class TCPClientManager extends Thread {
 //                        }
 //                    }
                 }
-//               clearLastSocket();
+               clearLastSocket();
             }
-        } catch (Exception ex) {
+        } catch (IOException ex) {
             Logger.getLogger(
                 TCPClientManager.class.getName()).log(Level.SEVERE, null, ex);
         }
@@ -170,10 +166,10 @@ public class TCPClientManager extends Thread {
     
     private void clearLastSocket() {
         try {
-//            this.writer.close();
-//            this.reader.close();
+            this.printWriter.close();
+            this.printReader.close();
             this.clientSocket.close();
-        } catch (Exception ex) {
+        } catch (IOException ex) {
             Logger.getLogger(
                 TCPClientManager.class.getName()).log(Level.SEVERE, null, ex);
         }
