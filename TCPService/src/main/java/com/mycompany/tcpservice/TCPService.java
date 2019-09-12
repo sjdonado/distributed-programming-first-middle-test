@@ -34,6 +34,11 @@ public class TCPService implements TCPServiceManagerCallerInterface {
         System.out.println(clientSocket.getInetAddress().getHostName()
                 + ":" + clientSocket.getPort() + ": " + new String(data));
     }
+    
+    @Override
+    public void fileReceivedFromClient(Socket clientSocket, byte[] file) {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
 
     @Override
     public void errorHasBeenThrown(Exception ex) {

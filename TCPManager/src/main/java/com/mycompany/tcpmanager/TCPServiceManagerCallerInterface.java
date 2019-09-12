@@ -12,6 +12,7 @@ import java.net.Socket;
  * @author sjdonado
  */
 public interface TCPServiceManagerCallerInterface {
-    public void messageReceivedFromClient(Socket clientSocket, byte[] data);
+    public void messageReceivedFromClient(Socket clientSocket, byte[] message);
+    public void fileReceivedFromClient(Socket clientSocket, byte[] file);
     public void errorHasBeenThrown(Exception ex); 
 }

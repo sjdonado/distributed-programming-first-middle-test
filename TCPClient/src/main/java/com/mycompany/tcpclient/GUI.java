@@ -127,18 +127,8 @@ public class GUI extends javax.swing.JFrame implements TCPServiceManagerCallerIn
         int returnVal = this.fileChooser.showOpenDialog(this);
         if (returnVal == JFileChooser.APPROVE_OPTION) {
             File file = fileChooser.getSelectedFile();
-            try {
-                if (this.tcpClientManager != null) {
-                    this.tcpClientManager.sendMessage(Files.readAllBytes(file.toPath()));
-                }
-//            try {
-//              // What to do with the file, e.g. display it in a TextArea
-//              textarea.read( new FileReader( file.getAbsolutePath() ), null );
-//            } catch (IOException ex) {
-//              System.out.println("problem accessing file"+file.getAbsolutePath());
-//            }
-            } catch (IOException ex) {
-                Logger.getLogger(GUI.class.getName()).log(Level.SEVERE, null, ex);
+            if (this.tcpClientManager != null) {
+                this.tcpClientManager.sendFile(file);
             }
         } else {
             System.out.println("File access cancelled by user.");
@@ -181,10 +171,15 @@ public class GUI extends javax.swing.JFrame implements TCPServiceManagerCallerIn
     }
 
     @Override
-    public void messageReceivedFromClient(Socket clientSocket, byte[] data) {
+    public void messageReceivedFromClient(Socket clientSocket, byte[] message) {
         Logger.getLogger(
-                GUI.class.getName()).log(Level.INFO, new String(data));
-        this.labelServerMessage.setText(new String(data) + "\n");
+                GUI.class.getName()).log(Level.INFO, new String(message));
+        this.labelServerMessage.setText(new String(message) + "\n");
+    }
+    
+    @Override
+    public void fileReceivedFromClient(Socket clientSocket, byte[] file) {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
 
     @Override

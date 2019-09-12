@@ -71,22 +71,21 @@ public class TCPServiceManager extends Thread implements TCPServiceManagerCaller
         try {
             this.serverSocket = new ServerSocket(port);
             while (this.isEnabled) {
-                //clients.add( new ClientSocketManager( 
-                  //      serverSocket.accept(),this));
-                Socket receivedSocket = serverSocket.accept();
-                TCPClientManager freeClientSocketManager = getNotBusyClientSocketManager();
-                Logger.getLogger(
-                    TCPServiceManager.class.getName()).log(Level.INFO, "NEW CLIENT CONNECTED! ");
-                
-                if (freeClientSocketManager != null) {
-                    freeClientSocketManager.assignSocketToThisThread(receivedSocket);
-                } else {
-                    try {
-                        receivedSocket.close();
-                    } catch(IOException error) {
-                        this.caller.errorHasBeenThrown(error);
-                    }
-                }
+                clients.add(new TCPClientManager(serverSocket.accept(), this));
+//                Socket receivedSocket = serverSocket.accept();
+//                TCPClientManager freeClientSocketManager = getNotBusyClientSocketManager();
+//                Logger.getLogger(
+//                    TCPServiceManager.class.getName()).log(Level.INFO, "NEW CLIENT CONNECTED! ");
+//                
+//                if (freeClientSocketManager != null) {
+//                    freeClientSocketManager.assignSocketToThisThread(receivedSocket);
+//                } else {
+//                    try {
+//                        receivedSocket.close();
+//                    } catch(IOException error) {
+//                        this.caller.errorHasBeenThrown(error);
+//                    }
+//                }
             }
         } catch (Exception error) {
             this.caller.errorHasBeenThrown(error);
@@ -99,6 +98,11 @@ public class TCPServiceManager extends Thread implements TCPServiceManagerCaller
 //                                clientSocket.getInetAddress().
 //                                getHostName()+":"+clientSocket.getPort()
 //                                +": "+new String(data));
+    }
+    
+    @Override
+    public void fileReceivedFromClient(Socket clientSocket, byte[] file) {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
 
     @Override

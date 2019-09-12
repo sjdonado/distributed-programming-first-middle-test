@@ -5,14 +5,20 @@
  */
 package com.mycompany.tcpmanager;
 
+import java.io.BufferedInputStream;
+import java.io.BufferedOutputStream;
 import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
 import java.net.Socket;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import org.apache.commons.io.IOUtils;
 
 /**
  *
@@ -24,8 +30,11 @@ public class TCPClientManager extends Thread {
     private boolean isEnabled = true;
     private String serverIpAdress;
     private int port;
-    private PrintWriter writer;
-    private BufferedReader reader;
+    private PrintWriter printWriter;
+    private BufferedReader printReader;
+    private BufferedInputStream reader;
+    private BufferedOutputStream writer;
+
     private final Object mutex = new Object();
 
     public void waitForAWhile(){
@@ -96,10 +105,14 @@ public class TCPClientManager extends Thread {
                     return false;
                 }
             }
-            this.reader = new BufferedReader(
+            this.writer = new BufferedOutputStream(clientSocket.getOutputStream());
+            this.reader = new BufferedInputStream(clientSocket.getInputStream());
+            
+            this.printReader = new BufferedReader(
                     new InputStreamReader(clientSocket.getInputStream()));
-            this.writer = new PrintWriter(
+            this.printWriter = new PrintWriter(
                     new OutputStreamWriter(clientSocket.getOutputStream()), true);
+
             return true;
         } catch (Exception ex) {
             caller.errorHasBeenThrown(ex);
@@ -108,21 +121,30 @@ public class TCPClientManager extends Thread {
     }
     
     @Override
-    public void run(){
+    public void run() {
         try {
             while (this.isEnabled) {
-                if(this.clientSocket == null) {
-                    this.waitForAWhile();
-                }
+//                if(this.clientSocket == null) {
+//                    this.waitForAWhile();
+//                }
                 if (initializeStreams()) {
-                    String line = null;
-                    while((line = this.reader.readLine()) != null) {
+                    String message;
+                    sendMessage("Successful connection");
+                    while((message = this.printReader.readLine()) != null) {
                        Logger.getLogger(
                             TCPClientManager.class.getName()).log(
-                                    Level.INFO,
-                                    this.clientSocket.getInetAddress().getHostAddress() + ": " + line
+                                Level.INFO,
+                                this.clientSocket.getInetAddress().getHostAddress() + ": " + message
                         );
+                       this.caller.messageReceivedFromClient(clientSocket, message.getBytes());
                     }
+                    
+//                    while(this.reader.available() > 0) {
+//                        this.reader.
+//                        byte[] file =  this.reader.read();
+//                        caller.fileReceivedFromClient(clientSocket, file);
+//                    }
+                    
 //                    sendMessage("Successful connection".getBytes());
 //                    while (true) {
 //                        try {
@@ -138,7 +160,7 @@ public class TCPClientManager extends Thread {
 //                        }
 //                    }
                 }
-               clearLastSocket();
+//               clearLastSocket();
             }
         } catch (Exception ex) {
             Logger.getLogger(
@@ -162,13 +184,25 @@ public class TCPClientManager extends Thread {
         return this.clientSocket != null;
     }
     
-    public void sendMessage(byte[] message) {
+    public void sendMessage(String message) {
         try {
             if (this.clientSocket.isConnected()) {
-                this.writer.write(message + "\n");
-                this.writer.flush();
+                this.printWriter.write(message + "\n");
+                this.printWriter.flush();
             }
         } catch (Exception ex) {
+            this.caller.errorHasBeenThrown(ex);
+        }
+    }
+    
+    public void sendFile(File file) {
+        try {
+            if (this.clientSocket.isConnected()) {
+                OutputStream out = this.clientSocket.getOutputStream();
+                BufferedInputStream in = new BufferedInputStream(new FileInputStream(file));
+                IOUtils.copy(in, out);
+            }
+        } catch (IOException ex) {
             this.caller.errorHasBeenThrown(ex);
         }
     }
