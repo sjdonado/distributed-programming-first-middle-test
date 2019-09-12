@@ -130,31 +130,14 @@ public class TCPClientManager extends Thread {
                 }
                 if (initializeStreams()) {
                     sendMessage("Successful connection");
-                    String message;
-                    while((message = this.printReader.readLine()) != null) {
-                       this.caller.messageReceivedFromClient(clientSocket, message.getBytes());
+//                    String message;
+//                    while((message = this.printReader.readLine()) != null) {
+//                       this.caller.messageReceivedFromClient(clientSocket, message.getBytes());
+//                    }
+                    while (true) {
+                        this.caller.chunkReceivedFromClient(clientSocket, this.reader.readNBytes(1500));
+                        if (this.reader.read() == -1) break;
                     }
-                    
-//                    while(this.reader.available() > 0) {
-//                        this.reader.
-//                        byte[] file =  this.reader.read();
-//                        caller.fileReceivedFromClient(clientSocket, file);
-//                    }
-                    
-//                    sendMessage("Successful connection".getBytes());
-//                    while (true) {
-//                        try {
-//                            int data = this.reader.read();
-//                            Logger.getLogger(
-//                                TCPClientManager.class.getName()).log(
-//                                        Level.INFO,
-//                                        this.clientSocket.getInetAddress().getHostAddress() + ": " + data
-//                                );
-//    //                        caller.messageReceiveFromClient(clientSocket, newMessage.getBytes());
-//                        } catch (Exception ex) {
-//                            break;
-//                        }
-//                    }
                 }
                clearLastSocket();
             }

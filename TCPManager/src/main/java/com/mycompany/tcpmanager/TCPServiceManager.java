@@ -24,9 +24,9 @@ public class TCPServiceManager extends Thread implements TCPServiceManagerCaller
     private final boolean isEnabled = true;
     private final ArrayList<TCPClientManager> clients = new ArrayList<>();
     
-    public TCPServiceManager(int port, TCPServiceManagerCallerInterface caller) {
+    public TCPServiceManager(int port) {
         this.port = port;
-        this.caller = caller;
+        this.caller = this;
         initializeThreads();
         this.start();
     }
@@ -94,7 +94,7 @@ public class TCPServiceManager extends Thread implements TCPServiceManagerCaller
     public void messageReceivedFromClient(Socket clientSocket, byte[] data) {
         Logger.getLogger(TCPServiceManager.class.getName()).log(
                 Level.INFO,
-                "{0}:{1}=> {2}",new Object[]{
+                "MESSAGE - {0}:{1}=> {2}",new Object[]{
                     clientSocket.getInetAddress().getHostName(),
                     clientSocket.getPort(),
                     new String(data)
@@ -103,8 +103,15 @@ public class TCPServiceManager extends Thread implements TCPServiceManagerCaller
     }
     
     @Override
-    public void fileReceivedFromClient(Socket clientSocket, byte[] file) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    public void chunkReceivedFromClient(Socket clientSocket, byte[] data) {
+        Logger.getLogger(TCPServiceManager.class.getName()).log(
+                Level.INFO,
+                "CHUNK - {0}:{1}=> {2}",new Object[]{
+                    clientSocket.getInetAddress().getHostName(),
+                    clientSocket.getPort(),
+                    new String(data)
+                }
+        );
     }
 
     @Override

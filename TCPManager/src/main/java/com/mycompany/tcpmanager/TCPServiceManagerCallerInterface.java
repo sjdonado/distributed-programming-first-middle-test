@@ -13,6 +13,6 @@ import java.net.Socket;
  */
 public interface TCPServiceManagerCallerInterface {
     public void messageReceivedFromClient(Socket clientSocket, byte[] message);
-    public void fileReceivedFromClient(Socket clientSocket, byte[] file);
+    public void chunkReceivedFromClient(Socket clientSocket, byte[] data);
     public void errorHasBeenThrown(Exception ex); 
 }
