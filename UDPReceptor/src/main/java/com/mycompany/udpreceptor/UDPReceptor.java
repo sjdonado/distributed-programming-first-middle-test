@@ -16,7 +16,7 @@ import java.util.logging.Logger;
  * @author sjdonado
  */
 public class UDPReceptor implements UDPManagerCallerInterface {
-    private final int NUMBER_OF_RECEPTORS = 3;
+    private final int NUMBER_OF_RECEPTORS = 1;
     private final ArrayList<UDPManager> receptors = new ArrayList<>();
     
     public UDPReceptor() {
@@ -31,11 +31,10 @@ public class UDPReceptor implements UDPManagerCallerInterface {
     }
     
     public void initializeReceptors() {
-//        Index 0 is taken by TCPManager
-        for (int index = 1; index <= NUMBER_OF_RECEPTORS; index++) {
-            receptors.add(new UDPManager(index, this));
+        for (int index = 0; index < NUMBER_OF_RECEPTORS; index++) {
+            receptors.add(new UDPManager(this));
             Logger.getLogger(
-                UDPReceptor.class.getName()).log(Level.INFO, "UDP receptor {0} running", index);
+                UDPReceptor.class.getName()).log(Level.INFO, "UDP receptor {0} running", index + 1);
         }
     }
 

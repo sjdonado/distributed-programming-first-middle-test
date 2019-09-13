@@ -34,6 +34,7 @@ public class TCPClientManager extends Thread {
     private BufferedInputStream reader;
     private BufferedOutputStream writer;
     private final Object mutex = new Object();
+    private int clientManagerId;
 
     public void waitForAWhile(){
         try {
@@ -58,7 +59,8 @@ public class TCPClientManager extends Thread {
     }
    
 //    TCPServiceManager connection
-    public TCPClientManager(TCPServiceManagerCallerInterface caller) {
+    public TCPClientManager(int id, TCPServiceManagerCallerInterface caller) {
+        this.clientManagerId = id;
         this.serviceConnection = true;
         this.caller = caller;
         this.start();            
@@ -133,12 +135,12 @@ public class TCPClientManager extends Thread {
                 }
                 if (initializeStreams()) {
                     sendMessage(new byte[] {0, 0});
-                    byte[] chunk = new byte[1500];
+                    byte[] chunk = new byte[1497];
                     int data, index = 0, remainingBytes;
                     while ((data = this.reader.read()) != -1) {
                         remainingBytes = this.reader.available();
                         chunk[index] = (byte) data;
-                        if (index == 1499 || remainingBytes == 0) {
+                        if (index == 1496 || remainingBytes == 0) {
                             if (index == 1) {
                                 if ((chunk[0] &255) == 0 && (chunk[1] &255) == 0) {
                                     this.caller.messageReceivedFromClient(
@@ -153,6 +155,9 @@ public class TCPClientManager extends Thread {
                                     );
                                 }
                             } else {
+//                                chunk[1495] = 
+//                                chunk[1496] =
+//                                chunk[1496] = 
                                 this.caller.chunkReceivedFromClient(clientSocket, chunk);
 //                                if (remainingBytes == 0) sendMessage(new byte[] {0, 1});
                             }
@@ -161,7 +166,7 @@ public class TCPClientManager extends Thread {
                         index += 1;
                     }
                 }
-                sendMessage(new byte[] {0, 1});
+//                sendMessage(new byte[] {0, 1});
                 if (this.serviceConnection) {
                     clearLastSocket();
                 }

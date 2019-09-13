@@ -16,6 +16,7 @@ import java.net.SocketException;
  * @author sjdonado
  */
 public class UDPManager extends Thread {
+    static int receptorIdCounter = 0;
     private DatagramSocket datagramSocket;
     private int listeningPort;
     private String defaultIpAddress;
@@ -23,11 +24,12 @@ public class UDPManager extends Thread {
     private boolean isEnabled = true;
     private int receptorId;
 
-    public UDPManager(int id, UDPManagerCallerInterface caller) {
+    public UDPManager(UDPManagerCallerInterface caller) {
         this.listeningPort = 8080;
         this.defaultIpAddress = "224.0.0.1";
         this.caller = caller;
-        this.receptorId = id;
+        this.receptorId = receptorIdCounter;
+        receptorIdCounter += 1;
         this.start();
     }
 
