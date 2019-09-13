@@ -12,6 +12,7 @@ import java.net.Socket;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.JFileChooser;
+import javax.swing.JOptionPane;
 
 /**
  *
@@ -26,6 +27,8 @@ public class GUI extends javax.swing.JFrame implements TCPServiceManagerCallerIn
      */
     public GUI() {
         initComponents();
+        downButton.setEnabled(false);
+        buttonSelectFile.setEnabled(false);
     }
 
     /**
@@ -38,6 +41,10 @@ public class GUI extends javax.swing.JFrame implements TCPServiceManagerCallerIn
     private void initComponents() {
 
         fileChooser = new javax.swing.JFileChooser();
+        jFrame1 = new javax.swing.JFrame();
+        fileCombo = new javax.swing.JComboBox<>();
+        selectDownFile = new javax.swing.JButton();
+        jLabel3 = new javax.swing.JLabel();
         jLabel1 = new javax.swing.JLabel();
         textServerIP = new javax.swing.JTextField();
         jLabel2 = new javax.swing.JLabel();
@@ -45,6 +52,48 @@ public class GUI extends javax.swing.JFrame implements TCPServiceManagerCallerIn
         buttonConnectToServer = new javax.swing.JButton();
         labelServerMessage = new javax.swing.JLabel();
         buttonSelectFile = new javax.swing.JButton();
+        downButton = new javax.swing.JButton();
+
+        jFrame1.setMinimumSize(new java.awt.Dimension(305, 294));
+
+        fileCombo.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] {}));
+
+        selectDownFile.setText("Select File");
+        selectDownFile.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                selectDownFileActionPerformed(evt);
+            }
+        });
+
+        jLabel3.setFont(new java.awt.Font("Tahoma", 1, 12)); // NOI18N
+        jLabel3.setText("File List");
+
+        javax.swing.GroupLayout jFrame1Layout = new javax.swing.GroupLayout(jFrame1.getContentPane());
+        jFrame1.getContentPane().setLayout(jFrame1Layout);
+        jFrame1Layout.setHorizontalGroup(
+            jFrame1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(jFrame1Layout.createSequentialGroup()
+                .addContainerGap()
+                .addComponent(fileCombo, javax.swing.GroupLayout.PREFERRED_SIZE, 169, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 33, Short.MAX_VALUE)
+                .addComponent(selectDownFile)
+                .addContainerGap())
+            .addGroup(jFrame1Layout.createSequentialGroup()
+                .addGap(69, 69, 69)
+                .addComponent(jLabel3)
+                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+        );
+        jFrame1Layout.setVerticalGroup(
+            jFrame1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(jFrame1Layout.createSequentialGroup()
+                .addContainerGap()
+                .addComponent(jLabel3)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addGroup(jFrame1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(selectDownFile)
+                    .addComponent(fileCombo, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addContainerGap(239, Short.MAX_VALUE))
+        );
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
 
@@ -70,6 +119,13 @@ public class GUI extends javax.swing.JFrame implements TCPServiceManagerCallerIn
             }
         });
 
+        downButton.setText("Download File");
+        downButton.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                downButtonActionPerformed(evt);
+            }
+        });
+
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
         getContentPane().setLayout(layout);
         layout.setHorizontalGroup(
@@ -83,11 +139,14 @@ public class GUI extends javax.swing.JFrame implements TCPServiceManagerCallerIn
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(textServerIP, javax.swing.GroupLayout.PREFERRED_SIZE, 100, javax.swing.GroupLayout.PREFERRED_SIZE)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(jLabel2)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(textServerPort, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(buttonConnectToServer)))
+                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                            .addComponent(downButton)
+                            .addGroup(layout.createSequentialGroup()
+                                .addComponent(jLabel2)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                .addComponent(textServerPort, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                .addComponent(buttonConnectToServer)))))
                 .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
             .addGroup(layout.createSequentialGroup()
                 .addComponent(buttonSelectFile)
@@ -104,7 +163,9 @@ public class GUI extends javax.swing.JFrame implements TCPServiceManagerCallerIn
                     .addComponent(textServerPort, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addComponent(buttonConnectToServer))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(buttonSelectFile)
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(buttonSelectFile)
+                    .addComponent(downButton))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(labelServerMessage)
                 .addContainerGap(224, Short.MAX_VALUE))
@@ -119,6 +180,8 @@ public class GUI extends javax.swing.JFrame implements TCPServiceManagerCallerIn
                 Integer.parseInt(this.textServerPort.getText()),
                 this
         );
+        downButton.setEnabled(true);
+        buttonSelectFile.setEnabled(true);
     }//GEN-LAST:event_buttonConnectToServerActionPerformed
 
     private void buttonSelectFileActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_buttonSelectFileActionPerformed
@@ -132,6 +195,18 @@ public class GUI extends javax.swing.JFrame implements TCPServiceManagerCallerIn
             System.out.println("File access cancelled by user.");
         }
     }//GEN-LAST:event_buttonSelectFileActionPerformed
+
+    private void downButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_downButtonActionPerformed
+        jFrame1.setVisible(true);
+        String[] archivoArray={"Juan", "José", "Miguel", "Antonio"};
+        for(String objeto : archivoArray) {
+            fileCombo.addItem(objeto.toString());
+        }
+    }//GEN-LAST:event_downButtonActionPerformed
+
+    private void selectDownFileActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_selectDownFileActionPerformed
+        JOptionPane.showMessageDialog(jFrame1, "File downloaded successfully!");
+    }//GEN-LAST:event_selectDownFileActionPerformed
 
     /**
      * @param args the command line arguments
@@ -159,6 +234,9 @@ public class GUI extends javax.swing.JFrame implements TCPServiceManagerCallerIn
             java.util.logging.Logger.getLogger(GUI.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
         }
         //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
 
         /* Create and display the form */
         java.awt.EventQueue.invokeLater(new Runnable() {
@@ -168,6 +246,24 @@ public class GUI extends javax.swing.JFrame implements TCPServiceManagerCallerIn
         });
     }
 
+    
+    // Variables declaration - do not modify//GEN-BEGIN:variables
+    private javax.swing.JButton buttonConnectToServer;
+    private javax.swing.JButton buttonSelectFile;
+    private javax.swing.JButton downButton;
+    private javax.swing.JFileChooser fileChooser;
+    private javax.swing.JComboBox<String> fileCombo;
+    private javax.swing.JFrame jFrame1;
+    private javax.swing.JLabel jLabel1;
+    private javax.swing.JLabel jLabel2;
+    private javax.swing.JLabel jLabel3;
+    private javax.swing.JLabel labelServerMessage;
+    private javax.swing.JButton selectDownFile;
+    private javax.swing.JTextField textServerIP;
+    private javax.swing.JTextField textServerPort;
+    // End of variables declaration//GEN-END:variables
+
+   
     @Override
     public void messageReceivedFromClient(Socket clientSocket, String message) {
         Logger.getLogger(
@@ -187,14 +283,4 @@ public class GUI extends javax.swing.JFrame implements TCPServiceManagerCallerIn
         this.labelServerMessage.setText(ex.getMessage() + "\n");
     }
 
-    // Variables declaration - do not modify//GEN-BEGIN:variables
-    private javax.swing.JButton buttonConnectToServer;
-    private javax.swing.JButton buttonSelectFile;
-    private javax.swing.JFileChooser fileChooser;
-    private javax.swing.JLabel jLabel1;
-    private javax.swing.JLabel jLabel2;
-    private javax.swing.JLabel labelServerMessage;
-    private javax.swing.JTextField textServerIP;
-    private javax.swing.JTextField textServerPort;
-    // End of variables declaration//GEN-END:variables
 }
