@@ -5,6 +5,8 @@
  */
 package com.mycompany.tcpmanager;
 
+import com.mycompany.udpmanager.UDPManager;
+import com.mycompany.udpmanager.UDPManagerCallerInterface;
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
@@ -16,17 +18,19 @@ import java.util.logging.Logger;
  *
  * @author sjdonado
  */
-public class TCPServiceManager extends Thread implements TCPServiceManagerCallerInterface {
+public class TCPServiceManager extends Thread implements TCPServiceManagerCallerInterface, UDPManagerCallerInterface {
     private final int NUMBER_OF_THREADS = 3; // DEVELOPMENT ENV, FOR PROD ENV CHANGE TO 50
     private ServerSocket serverSocket;
     private final int port;
     private final TCPServiceManagerCallerInterface caller;
     private final boolean isEnabled = true;
     private final ArrayList<TCPClientManager> clients = new ArrayList<>();
+    private UDPManager udpManager;
     
     public TCPServiceManager(int port) {
         this.port = port;
         this.caller = this;
+        this.udpManager = new UDPManager(0, this);
         initializeThreads();
         this.start();
     }
@@ -41,6 +45,7 @@ public class TCPServiceManager extends Thread implements TCPServiceManagerCaller
                 TCPServiceManager.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
+    
     
     public TCPClientManager getNotBusyTCPClientManager() {
         try {
@@ -57,14 +62,6 @@ public class TCPServiceManager extends Thread implements TCPServiceManagerCaller
         }
         return null;
     }
-    
-//    public void sendMessageToAllClients(String message) {
-//        for (TCPClientManager current : clients){
-//            if (current!=null) {
-//                current.sendMessage(message);
-//            }
-//        }
-//    }
     
     @Override
     public void run() {
@@ -104,19 +101,23 @@ public class TCPServiceManager extends Thread implements TCPServiceManagerCaller
     
     @Override
     public void chunkReceivedFromClient(Socket clientSocket, byte[] data) {
-        Logger.getLogger(TCPServiceManager.class.getName()).log(
-                Level.INFO,
-                "CHUNK - {0}:{1}=> {2}",new Object[]{
-                    clientSocket.getInetAddress().getHostName(),
-                    clientSocket.getPort(),
-                    new String(data)
-                }
-        );
+        udpManager.sendMessage(data);
     }
 
     @Override
     public void errorHasBeenThrown(Exception ex) {
         Logger.getLogger(
                 TCPServiceManager.class.getName()).log(Level.SEVERE, null, ex);
+    }
+
+//    UDPManager caller interface
+    @Override
+    public void dataReceived(int receptorId, String ipAdress, int sourcePort, byte[] data) {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
+
+    @Override
+    public void exceptionHasBeenThrown(Exception ex) {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
 }

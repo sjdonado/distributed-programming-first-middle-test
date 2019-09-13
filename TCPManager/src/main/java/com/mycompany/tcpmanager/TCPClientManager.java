@@ -149,7 +149,7 @@ public class TCPClientManager extends Thread {
                                 if ((chunk[0] &255) == 0 && (chunk[1] &255) == 1) {
                                     this.caller.messageReceivedFromClient(
                                         clientSocket,
-                                        "File received successfully"
+                                        "File saved successfully"
                                     );
                                 }
                             } else {
