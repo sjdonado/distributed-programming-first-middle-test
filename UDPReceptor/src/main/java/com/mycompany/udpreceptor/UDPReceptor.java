@@ -44,7 +44,7 @@ public class UDPReceptor implements UDPManagerCallerInterface {
     public void dataReceived(int receptorId, String ipAdress, int sourcePort, byte[] data) {
         Logger.getLogger(UDPReceptor.class.getName()).log(
                 Level.INFO,
-                "CHUNK - ReceptorId: {0} - {1}:{2}=> {3}",new Object[]{
+                "CHUNK - ReceptorId: {0} - {1}:{2}=> {3}", new Object[]{
                     receptorId,
                     ipAdress,
                     sourcePort,

@@ -24,11 +24,10 @@ public class UDPManager extends Thread {
     private int receptorId;
 
     public UDPManager(int id, UDPManagerCallerInterface caller) {
-        this.listeningPort = 8080 + id;
+        this.listeningPort = 8080;
         this.defaultIpAddress = "224.0.0.1";
         this.caller = caller;
         this.receptorId = id;
-        initializeDatagramSocket();
         this.start();
     }
 
