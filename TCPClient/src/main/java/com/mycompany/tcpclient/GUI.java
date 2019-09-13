@@ -169,10 +169,10 @@ public class GUI extends javax.swing.JFrame implements TCPServiceManagerCallerIn
     }
 
     @Override
-    public void messageReceivedFromClient(Socket clientSocket, byte[] message) {
+    public void messageReceivedFromClient(Socket clientSocket, String message) {
         Logger.getLogger(
-                GUI.class.getName()).log(Level.INFO, new String(message));
-        this.labelServerMessage.setText(new String(message) + "\n");
+                GUI.class.getName()).log(Level.INFO, message);
+        this.labelServerMessage.setText(message + "\n");
     }
     
     @Override

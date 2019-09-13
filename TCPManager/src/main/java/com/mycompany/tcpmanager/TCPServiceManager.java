@@ -91,13 +91,13 @@ public class TCPServiceManager extends Thread implements TCPServiceManagerCaller
 
 //    TCPClientManager caller interface
     @Override
-    public void messageReceivedFromClient(Socket clientSocket, byte[] data) {
+    public void messageReceivedFromClient(Socket clientSocket, String message) {
         Logger.getLogger(TCPServiceManager.class.getName()).log(
                 Level.INFO,
                 "MESSAGE - {0}:{1}=> {2}",new Object[]{
                     clientSocket.getInetAddress().getHostName(),
                     clientSocket.getPort(),
-                    new String(data)
+                    message
                 }
         );
     }

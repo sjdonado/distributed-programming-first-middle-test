@@ -7,15 +7,14 @@ package com.mycompany.tcpmanager;
 
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
-import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
-import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
 import java.net.Socket;
+import java.util.Arrays;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.apache.commons.io.IOUtils;
@@ -28,10 +27,10 @@ public class TCPClientManager extends Thread {
     private TCPServiceManagerCallerInterface caller;
     private Socket clientSocket;
     private boolean isEnabled = true;
+    private boolean serviceConnection = false;
     private String serverIpAdress;
     private int port;
     private PrintWriter printWriter;
-    private BufferedReader printReader;
     private BufferedInputStream reader;
     private BufferedOutputStream writer;
     private final Object mutex = new Object();
@@ -58,9 +57,10 @@ public class TCPClientManager extends Thread {
         }
     }
    
-//    TCPServiceManager connectio
+//    TCPServiceManager connection
     public TCPClientManager(TCPServiceManagerCallerInterface caller) {
-        this.caller = caller;            
+        this.serviceConnection = true;
+        this.caller = caller;
         this.start();            
     }
     
@@ -101,18 +101,21 @@ public class TCPClientManager extends Thread {
 
     public boolean initializeStreams(){
         try {
-            if (this.clientSocket == null){
-                if(!initializeSocket()){
+            if (this.clientSocket == null) {
+                if (!initializeSocket()) {
                     return false;
                 }
             }
-            this.writer = new BufferedOutputStream(clientSocket.getOutputStream());
-            this.reader = new BufferedInputStream(clientSocket.getInputStream());
-            
-            this.printReader = new BufferedReader(
-                    new InputStreamReader(clientSocket.getInputStream()));
-            this.printWriter = new PrintWriter(
-                    new OutputStreamWriter(clientSocket.getOutputStream()), true);
+
+            if (this.writer == null)
+                this.writer = new BufferedOutputStream(clientSocket.getOutputStream());
+
+            if (this.reader == null)
+                this.reader = new BufferedInputStream(clientSocket.getInputStream());
+
+//            if (this.printWriter == null)
+//                this.printWriter = new PrintWriter(
+//                    new OutputStreamWriter(clientSocket.getOutputStream()), true);
 
             return true;
         } catch (IOException ex) {
@@ -125,21 +128,43 @@ public class TCPClientManager extends Thread {
     public void run() {
         try {
             while (this.isEnabled) {
-                if(this.clientSocket == null && this.serverIpAdress == null) {
+                if(this.serviceConnection && this.clientSocket == null) {
                     this.waitForAWhile();
                 }
                 if (initializeStreams()) {
-                    sendMessage("Successful connection");
-//                    String message;
-//                    while((message = this.printReader.readLine()) != null) {
-//                       this.caller.messageReceivedFromClient(clientSocket, message.getBytes());
-//                    }
-                    while (true) {
-                        this.caller.chunkReceivedFromClient(clientSocket, this.reader.readNBytes(1500));
-                        if (this.reader.read() == -1) break;
+                    sendMessage(new byte[] {0, 0});
+                    byte[] chunk = new byte[1500];
+                    int data, index = 0, remainingBytes;
+                    while ((data = this.reader.read()) != -1) {
+                        remainingBytes = this.reader.available();
+                        chunk[index] = (byte) data;
+                        if (index == 1499 || remainingBytes == 0) {
+                            if (index == 1) {
+                                if ((chunk[0] &255) == 0 && (chunk[1] &255) == 0) {
+                                    this.caller.messageReceivedFromClient(
+                                        clientSocket,
+                                        "Successful connection"
+                                    );
+                                }
+                                if ((chunk[0] &255) == 0 && (chunk[1] &255) == 1) {
+                                    this.caller.messageReceivedFromClient(
+                                        clientSocket,
+                                        "File received successfully"
+                                    );
+                                }
+                            } else {
+                                this.caller.chunkReceivedFromClient(clientSocket, chunk);
+//                                if (remainingBytes == 0) sendMessage(new byte[] {0, 1});
+                            }
+                            index = 0;
+                        }
+                        index += 1;
                     }
                 }
-               clearLastSocket();
+                sendMessage(new byte[] {0, 1});
+                if (this.serviceConnection) {
+                    clearLastSocket();
+                }
             }
         } catch (IOException ex) {
             Logger.getLogger(
@@ -149,12 +174,13 @@ public class TCPClientManager extends Thread {
     
     private void clearLastSocket() {
         try {
-            this.printWriter.close();
-            this.printReader.close();
+            this.writer.close();
+            this.reader.close();
+
             this.clientSocket.close();
         } catch (IOException ex) {
-            Logger.getLogger(
-                TCPClientManager.class.getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger(TCPClientManager.class.getName())
+                    .log(Level.SEVERE, null, ex);
         }
         this.clientSocket = null;
     }
@@ -163,11 +189,11 @@ public class TCPClientManager extends Thread {
         return this.clientSocket != null;
     }
     
-    public void sendMessage(String message) {
+    public void sendMessage(byte[] message) {
         try {
             if (this.clientSocket.isConnected()) {
-                this.printWriter.write(message + "\n");
-                this.printWriter.flush();
+                this.writer.write(message, 0, 2);
+                this.writer.flush();
             }
         } catch (Exception ex) {
             this.caller.errorHasBeenThrown(ex);
@@ -177,9 +203,9 @@ public class TCPClientManager extends Thread {
     public void sendFile(File file) {
         try {
             if (this.clientSocket.isConnected()) {
-                OutputStream out = this.clientSocket.getOutputStream();
                 BufferedInputStream in = new BufferedInputStream(new FileInputStream(file));
-                IOUtils.copy(in, out);
+                IOUtils.copy(in, this.writer);
+                this.writer.flush();
             }
         } catch (IOException ex) {
             this.caller.errorHasBeenThrown(ex);
