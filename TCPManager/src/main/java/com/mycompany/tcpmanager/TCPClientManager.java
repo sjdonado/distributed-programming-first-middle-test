@@ -136,9 +136,9 @@ public class TCPClientManager extends Thread {
                 }
                 if (initializeStreams()) {
                     sendMessage(new byte[] {0, 0});
-                    byte[] chunk = new byte[1497];
+                    byte[] chunk = new byte[1500];
                     int data, index = 0, remainingBytes;
-                    String off1,off2,off3 = "00000000";
+                    int counter = 0;
                     while ((data = this.reader.read()) != -1) {
                         remainingBytes = this.reader.available();
                         chunk[index] = (byte) data;
@@ -157,10 +157,14 @@ public class TCPClientManager extends Thread {
                                     );
                                 }
                             } else {
-//                                chunk[1495] = 
-//                                chunk[1496] =
-//                                chunk[1496] = 
+                                byte[] offset = binaryCounter(counter, remainingBytes, this.clientManagerId);
+                                chunk[1496] = offset[0];
+                                chunk[1497] = offset[1];
+                                chunk[1498] = offset[2];
+                                chunk[1499] = offset[4];
+                                
                                 this.caller.chunkReceivedFromClient(clientSocket, chunk);
+                                counter++;
 //                                if (remainingBytes == 0) sendMessage(new byte[] {0, 1});
                             }
                             index = 0;
@@ -219,21 +223,18 @@ public class TCPClientManager extends Thread {
         }
     }
     
-    public byte[] binaryCounter(String off3, String off2, String off1){
-        if ("11111111".equals(off1)){
-            off1 = "00000000";
-            off2 = Integer.toBinaryString(Integer.parseInt(off2,2)+1);
-        }
-        if ("11111111".equals(off2)){
-            off2 = "00000000";
-            off3 = Integer.toBinaryString(Integer.parseInt(off2,2)+1);
-        }
-        off1 = Integer.toBinaryString(Integer.parseInt(off1,2)+1);
+    public byte[] binaryCounter(int counter, int remainingBytes, int socketID){
+        byte[] offset = new byte[4];
         
-        byte[] Offset = new byte[3];
-        Offset[0] = Byte.parseByte(off1,2);
-        Offset[1] = Byte.parseByte(off2,2);
-        Offset[2] = Byte.parseByte(off3,2);
-        return Offset;
+        offset[0] = Byte.parseByte(Integer.toBinaryString(counter % 255),2);
+        offset[1] = Byte.parseByte(Integer.toBinaryString(counter / 255),2);
+        offset[2] = Byte.parseByte(Integer.toBinaryString(counter / 65535),2);
+        int bit25th = counter/16777215;
+        
+        
+        String id = Integer.toBinaryString(socketID).substring(2, 8);
+        offset[4] = Byte.parseByte((remainingBytes == 0 ? 1 : 0) + id + bit25th);
+        
+        return offset;
     }
 }
