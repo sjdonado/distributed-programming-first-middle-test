@@ -113,7 +113,6 @@ public class TCPServiceManager extends Thread implements TCPServiceManagerCaller
 //    UDPManager caller interface
     @Override
     public void dataReceived(int receptorId, String ipAdress, int sourcePort, byte[] data) {
-        
 //        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
 
