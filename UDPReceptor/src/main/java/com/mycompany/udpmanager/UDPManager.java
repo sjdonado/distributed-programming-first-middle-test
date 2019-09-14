@@ -15,21 +15,22 @@ import java.net.MulticastSocket;
  * @author sjdonado
  */
 public class UDPManager extends Thread {
-    
-    MulticastSocket multicastSocket;
-    static int receptorIdCounter = 0;
-    private final int listeningPort;
-    private final String multicastAddress;
+    private final int listeningPort = 8080;
+    private final String multicastAddress = "224.0.0.1";
+
+    private MulticastSocket multicastSocket;
     private UDPManagerCallerInterface caller;
     private boolean isEnabled = true;
-    private final int receptorId;
+    private int receptorId;
 
-    public UDPManager(UDPManagerCallerInterface caller) {
-        this.listeningPort = 8080;
-        this.multicastAddress = "224.0.0.1";
+    public UDPManager(int receptorId, UDPManagerCallerInterface caller) {
+        this.receptorId = receptorId;
         this.caller = caller;
-        this.receptorId = receptorIdCounter;
-        receptorIdCounter += 1;
+        this.start();
+    }
+    
+    public UDPManager(UDPManagerCallerInterface caller) {
+        this.caller = caller;
         this.start();
     }
 
@@ -51,6 +52,11 @@ public class UDPManager extends Thread {
             if (initializeMulticastSocket()) {
                 while (this.isEnabled) {
                     multicastSocket.receive(datagramPacket);
+                    if (datagramPacket.getLength() <= 6) {
+                        int socketClientId = Integer.parseInt(
+                                new String(datagramPacket.getData()));
+                        this.caller.clientUploadFileFinished(socketClientId);
+                    }
                     this.caller.dataReceived(
                         this.receptorId,
                         datagramPacket.getAddress().toString(),

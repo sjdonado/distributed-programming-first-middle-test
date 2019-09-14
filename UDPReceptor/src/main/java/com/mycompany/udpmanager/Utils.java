@@ -14,7 +14,6 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -46,9 +45,10 @@ public class Utils {
         return offset;
     }
     
-    public static File getFileByClientSocketId(int clientSocketId,
-            ArrayList<Chunk> receivedChunks) {
-        File newFile = new File("file");
+    public static boolean getFileByClientSocketId(int clientSocketId,
+            String filePath, ArrayList<Chunk> receivedChunks) {
+
+        File newFile = new File(filePath);
         ArrayList<Chunk> found = new ArrayList<>();
 
         for (Chunk receivedChunk : receivedChunks) {
@@ -68,10 +68,11 @@ public class Utils {
         }
         try {
             joinFiles(files, newFile);
+            return true;
         } catch (IOException ex) {
             Logger.getLogger(Utils.class.getName()).log(Level.SEVERE, null, ex);
+            return false;
         }
-        return newFile;
     }
     
     public static void joinFiles(File[] sources, File destination)

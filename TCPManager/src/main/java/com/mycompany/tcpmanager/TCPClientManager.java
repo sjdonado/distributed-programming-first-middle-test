@@ -10,12 +10,8 @@ import java.io.BufferedOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
-import java.io.OutputStream;
-import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
-import static java.lang.Byte.parseByte;
 import java.net.Socket;
-import java.util.Arrays;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.apache.commons.io.IOUtils;
@@ -36,8 +32,25 @@ public class TCPClientManager extends Thread {
     private BufferedOutputStream writer;
     private final Object mutex = new Object();
     private int clientManagerId;
-
-    public void waitForAWhile(){
+   
+//    TCPServiceManager connection
+    public TCPClientManager(int id, TCPServiceManagerCallerInterface caller) {
+        this.clientManagerId = id;
+        this.serviceConnection = true;
+        this.caller = caller;
+        this.start();            
+    }
+    
+//    GUI connection
+    public TCPClientManager(String serverIpAddress, int port, 
+            TCPServiceManagerCallerInterface caller) {
+        this.serverIpAdress = serverIpAddress;
+        this.port = port;            
+        this.caller = caller;
+        this.start();
+    }
+    
+        public void waitForAWhile(){
         try {
             synchronized(mutex) {
                 mutex.wait();
@@ -57,30 +70,6 @@ public class TCPClientManager extends Thread {
             Logger.getLogger(
                     TCPClientManager.class.getName()).log(Level.SEVERE, null, ex);   
         }
-    }
-   
-//    TCPServiceManager connection
-    public TCPClientManager(int id, TCPServiceManagerCallerInterface caller) {
-        this.clientManagerId = id;
-        this.serviceConnection = true;
-        this.caller = caller;
-        this.start();            
-    }
-    
-//    public TCPClientManager(Socket clientSocket,
-//            TCPServiceManagerCallerInterface caller) {
-//        this.clientSocket = clientSocket;
-//        this.caller = caller;
-//        this.start();
-//    }
-
-//    GUI connection
-    public TCPClientManager(String serverIpAddress, int port, 
-            TCPServiceManagerCallerInterface caller) {
-        this.serverIpAdress = serverIpAddress;
-        this.port = port;            
-        this.caller = caller;
-        this.start();
     }
     
     public void assignSocketToThisThread(Socket socket){
