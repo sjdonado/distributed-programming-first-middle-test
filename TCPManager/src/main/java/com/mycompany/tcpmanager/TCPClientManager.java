@@ -13,6 +13,7 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
+import static java.lang.Byte.parseByte;
 import java.net.Socket;
 import java.util.Arrays;
 import java.util.logging.Level;
@@ -137,6 +138,7 @@ public class TCPClientManager extends Thread {
                     sendMessage(new byte[] {0, 0});
                     byte[] chunk = new byte[1497];
                     int data, index = 0, remainingBytes;
+                    String off1,off2,off3 = "00000000";
                     while ((data = this.reader.read()) != -1) {
                         remainingBytes = this.reader.available();
                         chunk[index] = (byte) data;
@@ -215,5 +217,23 @@ public class TCPClientManager extends Thread {
         } catch (IOException ex) {
             this.caller.errorHasBeenThrown(ex);
         }
+    }
+    
+    public byte[] binaryCounter(String off3, String off2, String off1){
+        if ("11111111".equals(off1)){
+            off1 = "00000000";
+            off2 = Integer.toBinaryString(Integer.parseInt(off2,2)+1);
+        }
+        if ("11111111".equals(off2)){
+            off2 = "00000000";
+            off3 = Integer.toBinaryString(Integer.parseInt(off2,2)+1);
+        }
+        off1 = Integer.toBinaryString(Integer.parseInt(off1,2)+1);
+        
+        byte[] Offset = new byte[3];
+        Offset[0] = Byte.parseByte(off1,2);
+        Offset[1] = Byte.parseByte(off2,2);
+        Offset[2] = Byte.parseByte(off3,2);
+        return Offset;
     }
 }
