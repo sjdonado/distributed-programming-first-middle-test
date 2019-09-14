@@ -157,12 +157,12 @@ public class TCPClientManager extends Thread {
                                     );
                                 }
                             } else {
-                                byte[] offset = binaryCounter(counter, remainingBytes, this.clientManagerId);
-                                chunk[1496] = offset[0];
-                                chunk[1497] = offset[1];
-                                chunk[1498] = offset[2];
-                                chunk[1499] = offset[4];
-                                
+//                                byte[] offset = binaryCounter(counter, remainingBytes, this.clientManagerId);
+//                                chunk[1496] = offset[0];
+//                                chunk[1497] = offset[1];
+//                                chunk[1498] = offset[2];
+//                                chunk[1499] = offset[4];
+//                                
                                 this.caller.chunkReceivedFromClient(clientSocket, chunk);
                                 counter++;
 //                                if (remainingBytes == 0) sendMessage(new byte[] {0, 1});
@@ -223,18 +223,20 @@ public class TCPClientManager extends Thread {
         }
     }
     
-    public byte[] binaryCounter(int counter, int remainingBytes, int socketID){
-        byte[] offset = new byte[4];
-        
-        offset[0] = Byte.parseByte(Integer.toBinaryString(counter % 255),2);
-        offset[1] = Byte.parseByte(Integer.toBinaryString(counter / 255),2);
-        offset[2] = Byte.parseByte(Integer.toBinaryString(counter / 65535),2);
-        int bit25th = counter/16777215;
-        
-        
-        String id = Integer.toBinaryString(socketID).substring(2, 8);
-        offset[4] = Byte.parseByte((remainingBytes == 0 ? 1 : 0) + id + bit25th);
-        
-        return offset;
-    }
+//    public byte[] binaryCounter(int counter, int remainingBytes, int socketID){
+//        byte[] offset = new byte[4];
+//        
+//        offset[0] = Byte.parseByte(Integer.toBinaryString(counter % 255),2);
+//        offset[1] = Byte.parseByte(Integer.toBinaryString(counter / 255),2);
+//        offset[2] = Byte.parseByte(Integer.toBinaryString(counter / 65535),2);
+//        int bit25th = counter/16777215;
+//        
+//        System.out.println(Integer.toBinaryString(socketID));
+//        String id2 = Integer.toBinaryString(socketID);
+//        
+//        String id = Integer.toBinaryString(socketID).substring(2, 6);
+//        offset[4] = Byte.parseByte((remainingBytes == 0 ? 1 : 0) + id + bit25th);
+//        
+//        return offset;
+//    }
 }
