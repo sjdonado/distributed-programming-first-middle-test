@@ -7,37 +7,39 @@ package com.mycompany.udpmanager;
 
 import java.io.IOException;
 import java.net.DatagramPacket;
-import java.net.DatagramSocket;
 import java.net.InetAddress;
-import java.net.SocketException;
+import java.net.MulticastSocket;
 
 /**
  *
  * @author sjdonado
  */
 public class UDPManager extends Thread {
-    static int receptorIdCounter = 0;
-    private DatagramSocket datagramSocket;
-    private int listeningPort;
-    private String defaultIpAddress;
+    private final int listeningPort = 8080;
+    private final String multicastAddress = "224.0.0.1";
+
+    private MulticastSocket multicastSocket;
     private UDPManagerCallerInterface caller;
     private boolean isEnabled = true;
     private int receptorId;
 
-    public UDPManager(UDPManagerCallerInterface caller) {
-        this.listeningPort = 8080;
-        this.defaultIpAddress = "224.0.0.1";
+    public UDPManager(int receptorId, UDPManagerCallerInterface caller) {
+        this.receptorId = receptorId;
         this.caller = caller;
-        this.receptorId = receptorIdCounter;
-        receptorIdCounter += 1;
+        this.start();
+    }
+    
+    public UDPManager(UDPManagerCallerInterface caller) {
+        this.caller = caller;
         this.start();
     }
 
-    private boolean initializeDatagramSocket() {
+    private boolean initializeMulticastSocket() {
         try {
-            this.datagramSocket = new DatagramSocket(listeningPort);
+            this.multicastSocket = new MulticastSocket(listeningPort);
+            multicastSocket.joinGroup(InetAddress.getByName(multicastAddress));
             return true;
-        } catch(SocketException error) {
+        } catch(IOException error) {
             this.caller.exceptionHasBeenThrown(error);
         }
         return false;
@@ -47,9 +49,14 @@ public class UDPManager extends Thread {
     public void run() {
         try {
             DatagramPacket datagramPacket = new DatagramPacket(new byte[1500], 1500);
-            if (initializeDatagramSocket()) {
+            if (initializeMulticastSocket()) {
                 while (this.isEnabled) {
-                    datagramSocket.receive(datagramPacket);
+                    multicastSocket.receive(datagramPacket);
+                    if (datagramPacket.getLength() <= 6) {
+                        int socketClientId = Integer.parseInt(
+                                new String(datagramPacket.getData()));
+                        this.caller.clientUploadFileFinished(socketClientId);
+                    }
                     this.caller.dataReceived(
                         this.receptorId,
                         datagramPacket.getAddress().toString(),
@@ -66,9 +73,9 @@ public class UDPManager extends Thread {
     public boolean sendMessage(byte[] data) {
         try {
             DatagramPacket datagramPacketToBeSent = new DatagramPacket(data, data.length);
-            datagramPacketToBeSent.setAddress(InetAddress.getByName(this.defaultIpAddress));
+            datagramPacketToBeSent.setAddress(InetAddress.getByName(this.multicastAddress));
             datagramPacketToBeSent.setPort(this.listeningPort);
-            datagramSocket.send(datagramPacketToBeSent);
+            multicastSocket.send(datagramPacketToBeSent);
             return true;
         } catch (IOException error) {
             this.caller.exceptionHasBeenThrown(error);
@@ -79,5 +86,4 @@ public class UDPManager extends Thread {
     public int getReceptorId() {
         return receptorId;
     }
-    
 }

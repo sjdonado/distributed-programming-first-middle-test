@@ -25,7 +25,7 @@ public class TCPServiceManager extends Thread implements TCPServiceManagerCaller
     private final TCPServiceManagerCallerInterface caller;
     private final boolean isEnabled = true;
     private final ArrayList<TCPClientManager> clients = new ArrayList<>();
-    private UDPManager udpManager;
+    private final UDPManager udpManager;
     
     public TCPServiceManager(int port) {
         this.port = port;
@@ -38,7 +38,7 @@ public class TCPServiceManager extends Thread implements TCPServiceManagerCaller
     public void initializeThreads() {
         try {
             for (int index = 0; index < NUMBER_OF_THREADS; index++) {
-                clients.add(new TCPClientManager(0, this));
+                clients.add(new TCPClientManager(index, this));
             }
         } catch (Exception ex) {
             Logger.getLogger(
@@ -113,12 +113,16 @@ public class TCPServiceManager extends Thread implements TCPServiceManagerCaller
 //    UDPManager caller interface
     @Override
     public void dataReceived(int receptorId, String ipAdress, int sourcePort, byte[] data) {
-        
 //        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
 
     @Override
     public void exceptionHasBeenThrown(Exception ex) {
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
+
+    @Override
+    public void clientUploadFileFinished(int clientManagerId) {
+        clients.get(clientManagerId).sendMessage(new byte[] {0, 1});
     }
 }
