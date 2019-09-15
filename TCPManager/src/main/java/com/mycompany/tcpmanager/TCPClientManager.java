@@ -5,6 +5,7 @@
  */
 package com.mycompany.tcpmanager;
 
+import com.mycompany.udpmanager.Utils;
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
 import java.io.File;
@@ -126,37 +127,41 @@ public class TCPClientManager extends Thread {
                 if (initializeStreams()) {
                     sendMessage(new byte[] {0, 0});
                     byte[] chunk = new byte[1500];
-                    int data, index = 0, remainingBytes;
-                    int counter = 0;
+                    int data, index = 4, remainingBytes;
+                    int position = 0;
                     while ((data = this.reader.read()) != -1) {
                         remainingBytes = this.reader.available();
                         chunk[index] = (byte) data;
-                        if (index == 1496 || remainingBytes == 0) {
-                            if (index == 1) {
-                                if ((chunk[0] &255) == 0 && (chunk[1] &255) == 0) {
+                        if (index == 1499 || remainingBytes == 0) {
+                            if (index == 5) {
+                                if ((chunk[4] &255) == 0 && (chunk[5] &255) == 0) {
                                     this.caller.messageReceivedFromClient(
                                         clientSocket,
                                         "Successful connection"
                                     );
                                 }
-                                if ((chunk[0] &255) == 0 && (chunk[1] &255) == 1) {
+                                if ((chunk[4] &255) == 0 && (chunk[5] &255) == 1) {
                                     this.caller.messageReceivedFromClient(
                                         clientSocket,
                                         "File saved successfully"
                                     );
                                 }
                             } else {
-                                byte[] offset = binaryCounter(counter, remainingBytes, this.clientManagerId);
-                                chunk[1496] = offset[0];
-                                chunk[1497] = offset[1];
-                                chunk[1498] = offset[2];
-                                chunk[1499] = offset[3];
+                                byte[] offset = Utils.createHeader(
+                                    position,
+                                    remainingBytes,
+                                    this.clientManagerId
+                                );
+                                chunk[0] = offset[0];
+                                chunk[1] = offset[1];
+                                chunk[2] = offset[2];
+                                chunk[3] = offset[3];
 //                                
                                 this.caller.chunkReceivedFromClient(clientSocket, chunk);
-                                counter++;
+                                position++;
 //                                if (remainingBytes == 0) sendMessage(new byte[] {0, 1});
                             }
-                            index = 0;
+                            index = 4;
                         }
                         index += 1;
                     }
@@ -210,30 +215,5 @@ public class TCPClientManager extends Thread {
         } catch (IOException ex) {
             this.caller.errorHasBeenThrown(ex);
         }
-    }
-    
-    public static int unsignedToBytes(byte b) {
-    return b & 0xFF;
-  }
-    
-    public byte[] binaryCounter(int counter, int remainingBytes, int socketID){
-        byte[] offset = new byte[4];
-        
-        offset[0] = (byte) (counter % 255);
-        offset[1] = (byte) (counter / 255);
-        offset[2] = (byte) (counter / 65535);
-        int bit25th = counter/16777215;
-        
-        
-        String id = Integer.toBinaryString(socketID);
-        while (id.length() < 6){
-            id = "0"+id;
-        }
-        //System.out.println((remainingBytes == 0 ? 1 : 0) + id + bit25th);
-        offset[3] = (byte) Integer.parseInt((remainingBytes == 0 ? 1 : 0) + id + bit25th);
-        //System.out.println((unsignedToBytes(offset[3]) + 0x100).substring(1));
-        System.out.println(Integer.toBinaryString((offset[3] & 0xFF) + 0x100).substring(1));
-        
-        return offset;
     }
 }

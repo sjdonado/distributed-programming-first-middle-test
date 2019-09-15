@@ -52,7 +52,27 @@ public class UDPReceptor implements UDPManagerCallerInterface {
 //            Get from header
             int clientSocketId = 0, position = 0;
             boolean end = false;
-
+            
+            Logger.getLogger(UDPReceptor.class.getName()).log(
+                Level.INFO,
+                String.format("HEAD[0] => %8s", Integer.toBinaryString(data[0] & 0xFF)).replace(' ', '0')
+            );
+            
+            Logger.getLogger(UDPReceptor.class.getName()).log(
+                Level.INFO,
+                String.format("HEAD[1] => %8s", Integer.toBinaryString(data[1] & 0xFF)).replace(' ', '0')
+            );
+            
+            Logger.getLogger(UDPReceptor.class.getName()).log(
+                Level.INFO,
+                String.format("HEAD[2] => %8s", Integer.toBinaryString(data[2] & 0xFF)).replace(' ', '0')
+            );
+            
+            Logger.getLogger(UDPReceptor.class.getName()).log(
+                Level.INFO,
+                String.format("HEAD[3] => %8s", Integer.toBinaryString(data[3] & 0xFF)).replace(' ', '0')
+            );
+            
             File tempChunkFile = File.createTempFile("temp", null);
             tempChunkFile.deleteOnExit();
 
@@ -60,9 +80,8 @@ public class UDPReceptor implements UDPManagerCallerInterface {
                     end, tempChunkFile.getAbsolutePath()));
             
             if (end) {
-                boolean res = Utils.getFileByClientSocketId(clientSocketId,
-                        "file", receivedChunks);
-                if (res) {
+                if (Utils.createFileByClientSocketId(clientSocketId,
+                        "file", receivedChunks)) {
                     receptors.get(receptorId).sendMessage(
                             Integer.toBinaryString(clientSocketId).getBytes());
                 }

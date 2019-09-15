@@ -27,25 +27,33 @@ import org.apache.commons.io.IOUtils;
  * @author sjdonado
  */
 public class Utils {
-    public static byte[] binaryCounter(int counter, int remainingBytes,
-            int socketID) {
+    private static int unsignedToBytes(byte b) {
+        return b & 0xFF;
+    }
+
+    public static byte[] createHeader(int position, int remainingBytes, int socketID) {
         byte[] offset = new byte[4];
         
-        offset[0] = Byte.parseByte(Integer.toBinaryString(counter % 255), 2);
-        offset[1] = Byte.parseByte(Integer.toBinaryString(counter / 255), 2);
-        offset[2] = Byte.parseByte(Integer.toBinaryString(counter / 65535), 2);
-        int bit25th = counter / 16777215;
+        offset[0] = (byte) (position % 255);
+        offset[1] = (byte) (position / 255);
+        offset[2] = (byte) (position / 65535);
+        int bit25th = position / 16777215;
         
-        System.out.println(Integer.toBinaryString(socketID));
-        String id2 = Integer.toBinaryString(socketID);
-        
-        String id = Integer.toBinaryString(socketID).substring(2, 6);
-        offset[4] = Byte.parseByte((remainingBytes == 0 ? 1 : 0) + id + bit25th);
-        
+        String id = Integer.toBinaryString(socketID);
+        while (id.length() < 6){
+            id = "0" + id;
+        }
+        //System.out.println((remainingBytes == 0 ? 1 : 0) + id + bit25th);
+        offset[3] = (byte) Integer.parseInt((remainingBytes == 0 ? 1 : 0) + id + bit25th);
+        //System.out.println((unsignedToBytes(offset[3]) + 0x100).substring(1));
+        Logger.getLogger(Utils.class.getName()).log(
+            Level.INFO,
+            Integer.toBinaryString((offset[3] & 0xFF) + 0x100).substring(1)
+        );
         return offset;
     }
     
-    public static boolean getFileByClientSocketId(int clientSocketId,
+    public static boolean createFileByClientSocketId(int clientSocketId,
             String filePath, ArrayList<Chunk> receivedChunks) {
 
         File newFile = new File(filePath);
