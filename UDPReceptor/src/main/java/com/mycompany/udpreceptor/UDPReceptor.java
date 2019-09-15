@@ -53,6 +53,8 @@ public class UDPReceptor implements UDPManagerCallerInterface {
             int clientSocketId = 0, position = 0;
             boolean end = false;
             
+            Utils.unpackHeader(data, clientSocketId, position, end);
+            
             Logger.getLogger(UDPReceptor.class.getName()).log(
                 Level.INFO,
                 String.format("HEAD[0] => %8s", Integer.toBinaryString(data[0] & 0xFF)).replace(' ', '0')
