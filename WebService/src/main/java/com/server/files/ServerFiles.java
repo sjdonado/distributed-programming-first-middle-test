@@ -58,13 +58,11 @@ public class ServerFiles{
     }
     
     public File getSharedFile(String filename) {
-        File response;
         try {
-            response = new File(UPLOADS_FOLDER_PATH + File.separator + filename);
+            return new File(UPLOADS_FOLDER_PATH + File.separator + filename);
         } catch (Exception e) {
-            response = null;
             System.err.println(e);
         }
-        return response;
+        return null;
     }
 }
