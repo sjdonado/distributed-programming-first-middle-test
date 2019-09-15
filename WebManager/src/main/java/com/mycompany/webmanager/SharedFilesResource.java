@@ -18,6 +18,7 @@ import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
 import org.apache.commons.io.FileUtils;
 
 /**
@@ -43,7 +44,7 @@ public class SharedFilesResource {
      */
     @GET
     @Produces(MediaType.APPLICATION_JSON)
-    public String index() {
+    public Response index() {
         try{
             String endpoint="http://localhost:8080/WebService/webresources/files";
             String methodType="GET";
@@ -62,12 +63,14 @@ public class SharedFilesResource {
                 while ((inputLine = in.readLine()) != null) {
                     content.append(inputLine);
                 }
-                return content.toString();
+                return Response.ok(content.toString()).build();
+            } else {
+                Response.status(httpResponseCode).build();
             }
         }catch (IOException ex) {
             System.err.println(ex);
         }
-        return null;
+        return Response.serverError().build();
     }
     
      /**
@@ -78,16 +81,16 @@ public class SharedFilesResource {
     @GET
     @Path("{filename}")
     @Produces(MediaType.APPLICATION_OCTET_STREAM)
-    public File show(@PathParam("filename") String filename) {
+    public Response show(@PathParam("filename") String filename) {
         try{
             String endpoint = "http://localhost:8080/WebService/webresources/files";
             URL url = new URL(endpoint + "/" + filename);
             File file = new File(filename);
             FileUtils.copyURLToFile(url, file);
-            return file;
+            return Response.ok(file).build();
         }catch (IOException ex) {
             System.err.println(ex);
         }
-        return null;
+        return Response.serverError().build();
     }
 }

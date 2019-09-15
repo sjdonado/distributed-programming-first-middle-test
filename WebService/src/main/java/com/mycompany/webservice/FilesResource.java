@@ -16,6 +16,7 @@ import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
 
 /**
  * REST Web Service
@@ -40,13 +41,14 @@ public class FilesResource {
      */
     @GET
     @Produces(MediaType.APPLICATION_JSON)
-    public String index() {
+    public Response index() {
         Gson gson = new Gson();
+        ServerFiles serverFiles = ServerFiles.getInstance();
         try {
-            SharedFile[] files = ServerFiles.indexSharedFiles();
-            return gson.toJson(files);
+            SharedFile[] files = serverFiles.indexSharedFiles();
+            return Response.ok(gson.toJson(files)).build();
         } catch (Exception e) {
-            return gson.toJson("An error ocurred");
+            return Response.serverError().build();
         }
     }
     
@@ -58,13 +60,14 @@ public class FilesResource {
     @GET
     @Path("{filename}")
     @Produces(MediaType.APPLICATION_OCTET_STREAM)
-    public File show(@PathParam("filename") String filename) {
-        Gson gson = new Gson();
+    public Response show(@PathParam("filename") String filename) {
+        ServerFiles serverFiles = ServerFiles.getInstance();
         try {
-            return ServerFiles.getSharedFile(filename);
+            File file = serverFiles.getSharedFile(filename);
+            return Response.ok(file).build();
         } catch (Exception e) {
             System.err.println(e);
         }
-        return null;
+        return Response.status(404).build();
     }
 }

@@ -7,12 +7,19 @@ package com.mycompany.tcpclient;
 
 import com.mycompany.tcpmanager.TCPClientManager;
 import com.mycompany.tcpmanager.TCPServiceManagerCallerInterface;
+import com.server.files.SharedFile;
 import java.io.File;
 import java.net.Socket;
+import java.text.SimpleDateFormat;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.JFileChooser;
 import javax.swing.JOptionPane;
+import javax.swing.ListSelectionModel;
+import javax.swing.event.ListSelectionEvent;
+import javax.swing.event.ListSelectionListener;
+import javax.swing.table.DefaultTableModel;
+import org.apache.commons.io.FileUtils;
 
 /**
  *
@@ -21,14 +28,26 @@ import javax.swing.JOptionPane;
 public class GUI extends javax.swing.JFrame implements TCPServiceManagerCallerInterface {
     
     TCPClientManager tcpClientManager;
-
+    private SharedFile[] sharedFiles;
+    private SharedFile selectedFile;
+    private WebManagerClient webManagerClient;
+    private final DefaultTableModel fileTableModel;
+    private final SimpleDateFormat FILE_DATE_FORMAT = 
+        new SimpleDateFormat("dd/mm/yyyy h:mm a"); 
     /**
      * Creates new form GUI
      */
     public GUI() {
         initComponents();
-        downButton.setEnabled(false);
-        buttonSelectFile.setEnabled(false);
+        setLocationRelativeTo(null); 
+        this.fileTableModel = (DefaultTableModel) this.jTableFiles.getModel();
+        this.jTableFiles.getSelectionModel()
+            .addListSelectionListener(new FileSelectionHandler(this));
+   }
+    
+    public void selectFile(int index) {
+        this.btnDownloadFile.setEnabled(true);
+        this.selectedFile = this.sharedFiles[index];
     }
 
     /**
@@ -45,14 +64,25 @@ public class GUI extends javax.swing.JFrame implements TCPServiceManagerCallerIn
         fileCombo = new javax.swing.JComboBox<>();
         selectDownFile = new javax.swing.JButton();
         jLabel3 = new javax.swing.JLabel();
+        labelServerMessage = new javax.swing.JLabel();
+        jTabbedPane1 = new javax.swing.JTabbedPane();
+        jPanel1 = new javax.swing.JPanel();
         jLabel1 = new javax.swing.JLabel();
         textServerIP = new javax.swing.JTextField();
         jLabel2 = new javax.swing.JLabel();
         textServerPort = new javax.swing.JTextField();
         buttonConnectToServer = new javax.swing.JButton();
-        labelServerMessage = new javax.swing.JLabel();
         buttonSelectFile = new javax.swing.JButton();
-        downButton = new javax.swing.JButton();
+        jPanel2 = new javax.swing.JPanel();
+        jScrollPane1 = new javax.swing.JScrollPane();
+        jTableFiles = new javax.swing.JTable();
+        btnDownloadFile = new javax.swing.JButton();
+        jLabel4 = new javax.swing.JLabel();
+        txtDownloadServerIp = new javax.swing.JTextField();
+        jLabel5 = new javax.swing.JLabel();
+        txtDownloadServerPort = new javax.swing.JTextField();
+        btnWebManagerConnection = new javax.swing.JButton();
+        btnWebManagerSync = new javax.swing.JButton();
 
         jFrame1.setMinimumSize(new java.awt.Dimension(305, 294));
 
@@ -97,6 +127,8 @@ public class GUI extends javax.swing.JFrame implements TCPServiceManagerCallerIn
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
 
+        jTabbedPane1.setBackground(new java.awt.Color(255, 255, 255));
+
         jLabel1.setText("Server IP:");
 
         textServerIP.setText("127.0.0.1");
@@ -113,18 +145,164 @@ public class GUI extends javax.swing.JFrame implements TCPServiceManagerCallerIn
         });
 
         buttonSelectFile.setText("Select file");
+        buttonSelectFile.setEnabled(false);
         buttonSelectFile.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 buttonSelectFileActionPerformed(evt);
             }
         });
 
-        downButton.setText("Download File");
-        downButton.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                downButtonActionPerformed(evt);
+        javax.swing.GroupLayout jPanel1Layout = new javax.swing.GroupLayout(jPanel1);
+        jPanel1.setLayout(jPanel1Layout);
+        jPanel1Layout.setHorizontalGroup(
+            jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(jPanel1Layout.createSequentialGroup()
+                .addContainerGap()
+                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addComponent(buttonSelectFile)
+                    .addGroup(jPanel1Layout.createSequentialGroup()
+                        .addComponent(jLabel1)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(textServerIP, javax.swing.GroupLayout.PREFERRED_SIZE, 100, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(jLabel2)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(textServerPort, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(buttonConnectToServer)))
+                .addContainerGap(93, Short.MAX_VALUE))
+        );
+        jPanel1Layout.setVerticalGroup(
+            jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(jPanel1Layout.createSequentialGroup()
+                .addGap(24, 24, 24)
+                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(jLabel1)
+                    .addComponent(textServerIP, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(jLabel2)
+                    .addComponent(textServerPort, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(buttonConnectToServer))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(buttonSelectFile)
+                .addContainerGap(191, Short.MAX_VALUE))
+        );
+
+        jTabbedPane1.addTab("Upload", jPanel1);
+
+        jTableFiles.setModel(new javax.swing.table.DefaultTableModel(
+            new Object [][] {
+
+            },
+            new String [] {
+                "Name", "Created At", "Size (mb)"
+            }
+        ) {
+            Class[] types = new Class [] {
+                java.lang.String.class, java.lang.String.class, java.lang.String.class
+            };
+            boolean[] canEdit = new boolean [] {
+                false, false, false
+            };
+
+            public Class getColumnClass(int columnIndex) {
+                return types [columnIndex];
+            }
+
+            public boolean isCellEditable(int rowIndex, int columnIndex) {
+                return canEdit [columnIndex];
             }
         });
+        jTableFiles.getTableHeader().setReorderingAllowed(false);
+        jScrollPane1.setViewportView(jTableFiles);
+        if (jTableFiles.getColumnModel().getColumnCount() > 0) {
+            jTableFiles.getColumnModel().getColumn(2).setPreferredWidth(5);
+        }
+
+        btnDownloadFile.setText("Download");
+        btnDownloadFile.setEnabled(false);
+        btnDownloadFile.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btnDownloadFileActionPerformed(evt);
+            }
+        });
+
+        jLabel4.setText("Server IP:");
+
+        txtDownloadServerIp.setText("127.0.0.1");
+
+        jLabel5.setText("Port:");
+
+        txtDownloadServerPort.setText("8080");
+        txtDownloadServerPort.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                txtDownloadServerPortActionPerformed(evt);
+            }
+        });
+
+        btnWebManagerConnection.setText("Connect");
+        btnWebManagerConnection.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btnWebManagerConnectionActionPerformed(evt);
+            }
+        });
+
+        btnWebManagerSync.setText("Sync");
+        btnWebManagerSync.setEnabled(false);
+        btnWebManagerSync.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btnWebManagerSyncActionPerformed(evt);
+            }
+        });
+
+        javax.swing.GroupLayout jPanel2Layout = new javax.swing.GroupLayout(jPanel2);
+        jPanel2.setLayout(jPanel2Layout);
+        jPanel2Layout.setHorizontalGroup(
+            jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(jPanel2Layout.createSequentialGroup()
+                .addGap(6, 6, 6)
+                .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addGroup(jPanel2Layout.createSequentialGroup()
+                        .addComponent(jLabel4)
+                        .addGap(6, 6, 6)
+                        .addComponent(txtDownloadServerIp, javax.swing.GroupLayout.PREFERRED_SIZE, 100, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addGap(6, 6, 6)
+                        .addComponent(jLabel5)
+                        .addGap(6, 6, 6)
+                        .addComponent(txtDownloadServerPort, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addGap(6, 6, 6)
+                        .addComponent(btnWebManagerConnection)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(btnWebManagerSync))
+                    .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 430, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel2Layout.createSequentialGroup()
+                .addContainerGap()
+                .addComponent(btnDownloadFile)
+                .addContainerGap())
+        );
+        jPanel2Layout.setVerticalGroup(
+            jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(jPanel2Layout.createSequentialGroup()
+                .addGap(6, 6, 6)
+                .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addComponent(txtDownloadServerIp, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(txtDownloadServerPort, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                        .addComponent(btnWebManagerConnection)
+                        .addComponent(btnWebManagerSync))
+                    .addGroup(jPanel2Layout.createSequentialGroup()
+                        .addGap(5, 5, 5)
+                        .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                            .addComponent(jLabel4)
+                            .addComponent(jLabel5))))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 93, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                .addComponent(btnDownloadFile)
+                .addContainerGap())
+        );
+
+        jTabbedPane1.addTab("Download", jPanel2);
 
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
         getContentPane().setLayout(layout);
@@ -132,43 +310,18 @@ public class GUI extends javax.swing.JFrame implements TCPServiceManagerCallerIn
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(layout.createSequentialGroup()
                 .addContainerGap()
-                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING, false)
-                    .addComponent(labelServerMessage, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addGroup(layout.createSequentialGroup()
-                        .addComponent(jLabel1)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(textServerIP, javax.swing.GroupLayout.PREFERRED_SIZE, 100, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                            .addComponent(downButton)
-                            .addGroup(layout.createSequentialGroup()
-                                .addComponent(jLabel2)
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                .addComponent(textServerPort, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                .addComponent(buttonConnectToServer)))))
-                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
-            .addGroup(layout.createSequentialGroup()
-                .addComponent(buttonSelectFile)
-                .addGap(0, 0, Short.MAX_VALUE))
+                        .addComponent(labelServerMessage, javax.swing.GroupLayout.PREFERRED_SIZE, 349, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addGap(0, 0, Short.MAX_VALUE))
+                    .addComponent(jTabbedPane1)))
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(layout.createSequentialGroup()
-                .addContainerGap()
-                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(jLabel1)
-                    .addComponent(textServerIP, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(jLabel2)
-                    .addComponent(textServerPort, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(buttonConnectToServer))
+                .addComponent(jTabbedPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 211, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(buttonSelectFile)
-                    .addComponent(downButton))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(labelServerMessage)
-                .addContainerGap(224, Short.MAX_VALUE))
+                .addComponent(labelServerMessage))
         );
 
         pack();
@@ -180,7 +333,6 @@ public class GUI extends javax.swing.JFrame implements TCPServiceManagerCallerIn
                 Integer.parseInt(this.textServerPort.getText()),
                 this
         );
-        downButton.setEnabled(true);
         buttonSelectFile.setEnabled(true);
     }//GEN-LAST:event_buttonConnectToServerActionPerformed
 
@@ -196,18 +348,63 @@ public class GUI extends javax.swing.JFrame implements TCPServiceManagerCallerIn
         }
     }//GEN-LAST:event_buttonSelectFileActionPerformed
 
-    private void downButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_downButtonActionPerformed
-        jFrame1.setVisible(true);
-        String[] archivoArray={"Juan", "José", "Miguel", "Antonio"};
-        for(String objeto : archivoArray) {
-            fileCombo.addItem(objeto.toString());
-        }
-    }//GEN-LAST:event_downButtonActionPerformed
-
     private void selectDownFileActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_selectDownFileActionPerformed
-        JOptionPane.showMessageDialog(jFrame1, "File downloaded successfully!");
+        
     }//GEN-LAST:event_selectDownFileActionPerformed
 
+    private void btnWebManagerConnectionActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnWebManagerConnectionActionPerformed
+        this.webManagerClient = new WebManagerClient(
+                this.txtDownloadServerIp.getText(),
+                Integer.parseInt(this.txtDownloadServerPort.getText())
+        );
+        this.btnWebManagerConnection.setEnabled(false);
+        this.btnWebManagerSync.setEnabled(true);
+        this.fetchFiles();
+    }//GEN-LAST:event_btnWebManagerConnectionActionPerformed
+
+    private void fetchFiles() {
+        fileTableModel.setRowCount(0);
+        this.sharedFiles = this.webManagerClient.fetchFiles();
+        for(SharedFile file : this.sharedFiles) {
+            String parsedFileSize = FileUtils
+                .byteCountToDisplaySize(file.getSize());
+            String parsedDate = FILE_DATE_FORMAT.format(file.getCreatedAt());
+            fileTableModel.addRow(
+                new Object[]{file.getName(), parsedDate, parsedFileSize}
+            );
+        }
+    }
+    
+    private void downloadFile() {
+        if (this.webManagerClient.downloadFile(this.selectedFile.getName())) {
+            JOptionPane.showMessageDialog(
+                jFrame1,
+                "File downloaded successfully!"
+            );
+        } else {
+            JOptionPane.showMessageDialog(
+                jFrame1, 
+                "File didn't downloaded successfully",
+                "Error",
+                JOptionPane.ERROR_MESSAGE
+            );
+        }
+    }
+    
+    private void btnWebManagerSyncActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnWebManagerSyncActionPerformed
+        this.btnDownloadFile.setEnabled(false);
+        this.fetchFiles();
+    }//GEN-LAST:event_btnWebManagerSyncActionPerformed
+
+    private void txtDownloadServerPortActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_txtDownloadServerPortActionPerformed
+        // TODO add your handling code here:
+    }//GEN-LAST:event_txtDownloadServerPortActionPerformed
+
+    private void btnDownloadFileActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnDownloadFileActionPerformed
+        this.downloadFile();
+    }//GEN-LAST:event_btnDownloadFileActionPerformed
+
+    
     /**
      * @param args the command line arguments
      */
@@ -245,22 +442,49 @@ public class GUI extends javax.swing.JFrame implements TCPServiceManagerCallerIn
             }
         });
     }
+    
+    class FileSelectionHandler implements ListSelectionListener {
+        private final GUI context;
+        public FileSelectionHandler(GUI context) {
+            this.context = context;
+        }
+        
+        @Override
+        public void valueChanged(ListSelectionEvent e) { 
+            ListSelectionModel lsm = (ListSelectionModel)e.getSource();
+            if (!lsm.isSelectionEmpty()) {
+                int index = lsm.getMinSelectionIndex();
+                this.context.selectFile(index);
+            }
+        }
+    }
 
     
     // Variables declaration - do not modify//GEN-BEGIN:variables
+    private javax.swing.JButton btnDownloadFile;
+    private javax.swing.JButton btnWebManagerConnection;
+    private javax.swing.JButton btnWebManagerSync;
     private javax.swing.JButton buttonConnectToServer;
     private javax.swing.JButton buttonSelectFile;
-    private javax.swing.JButton downButton;
     private javax.swing.JFileChooser fileChooser;
     private javax.swing.JComboBox<String> fileCombo;
     private javax.swing.JFrame jFrame1;
     private javax.swing.JLabel jLabel1;
     private javax.swing.JLabel jLabel2;
     private javax.swing.JLabel jLabel3;
+    private javax.swing.JLabel jLabel4;
+    private javax.swing.JLabel jLabel5;
+    private javax.swing.JPanel jPanel1;
+    private javax.swing.JPanel jPanel2;
+    private javax.swing.JScrollPane jScrollPane1;
+    private javax.swing.JTabbedPane jTabbedPane1;
+    private javax.swing.JTable jTableFiles;
     private javax.swing.JLabel labelServerMessage;
     private javax.swing.JButton selectDownFile;
     private javax.swing.JTextField textServerIP;
     private javax.swing.JTextField textServerPort;
+    private javax.swing.JTextField txtDownloadServerIp;
+    private javax.swing.JTextField txtDownloadServerPort;
     // End of variables declaration//GEN-END:variables
 
    
