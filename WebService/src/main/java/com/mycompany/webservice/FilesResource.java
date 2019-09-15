@@ -8,13 +8,12 @@ package com.mycompany.webservice;
 import com.google.gson.Gson;
 import com.server.files.ServerFiles;
 import com.server.files.SharedFile;
+import java.io.File;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.UriInfo;
-import javax.ws.rs.Consumes;
 import javax.ws.rs.Produces;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
-import javax.ws.rs.PUT;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.core.MediaType;
 
@@ -54,18 +53,18 @@ public class FilesResource {
     /**
      * Retrieves representation of an instance of com.mycompany.webservice.FilesResource
      * @param filename
-     * @return an instance of java.lang.String
+     * @return an instance of java.io.File
      */
     @GET
     @Path("{filename}")
     @Produces(MediaType.APPLICATION_OCTET_STREAM)
-    public String show(@PathParam("filename") String filename) {
+    public File show(@PathParam("filename") String filename) {
         Gson gson = new Gson();
         try {
-            SharedFile[] files = ServerFiles.indexSharedFiles();
-            return gson.toJson(files);
+            return ServerFiles.getSharedFile(filename);
         } catch (Exception e) {
-            return gson.toJson("An error ocurred");
+            System.err.println(e);
         }
+        return null;
     }
 }

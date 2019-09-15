@@ -42,7 +42,7 @@ public class ServerFiles{
         return parsedFiles;
     }
     
-    public File getSharedFile(String filename) {
+    public static File getSharedFile(String filename) {
         File response;
         try {
             response = new File(UPLOADS_FOLDER_PATH + File.separator + filename);
