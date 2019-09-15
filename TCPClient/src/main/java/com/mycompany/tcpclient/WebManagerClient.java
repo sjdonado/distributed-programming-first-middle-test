@@ -28,14 +28,16 @@ public class WebManagerClient {
             + "/WebService/webresources/files";
     }
     
-    public void downloadFile(String filename) {
+    public boolean downloadFile(String filename) {
         try{
             URL url = new URL(this.BASE_URL + "/" + filename);
             File file = new File(DOWNLOAD_DIR + File.separator + filename);
             FileUtils.copyURLToFile(url, file);
+            return true;
         }catch (IOException ex) {
             System.err.println(ex);
         }
+        return false;
     }
     
     public SharedFile[] fetchFiles() {

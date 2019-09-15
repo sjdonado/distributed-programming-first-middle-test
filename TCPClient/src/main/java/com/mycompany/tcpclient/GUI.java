@@ -349,7 +349,7 @@ public class GUI extends javax.swing.JFrame implements TCPServiceManagerCallerIn
     }//GEN-LAST:event_buttonSelectFileActionPerformed
 
     private void selectDownFileActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_selectDownFileActionPerformed
-        JOptionPane.showMessageDialog(jFrame1, "File downloaded successfully!");
+        
     }//GEN-LAST:event_selectDownFileActionPerformed
 
     private void btnWebManagerConnectionActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnWebManagerConnectionActionPerformed
@@ -376,7 +376,19 @@ public class GUI extends javax.swing.JFrame implements TCPServiceManagerCallerIn
     }
     
     private void downloadFile() {
-        this.webManagerClient.downloadFile(this.selectedFile.getName());
+        if (this.webManagerClient.downloadFile(this.selectedFile.getName())) {
+            JOptionPane.showMessageDialog(
+                jFrame1,
+                "File downloaded successfully!"
+            );
+        } else {
+            JOptionPane.showMessageDialog(
+                jFrame1, 
+                "File didn't downloaded successfully",
+                "Error",
+                JOptionPane.ERROR_MESSAGE
+            );
+        }
     }
     
     private void btnWebManagerSyncActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnWebManagerSyncActionPerformed
