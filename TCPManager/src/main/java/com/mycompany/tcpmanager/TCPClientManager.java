@@ -212,6 +212,10 @@ public class TCPClientManager extends Thread {
         }
     }
     
+    public static int unsignedToBytes(byte b) {
+    return b & 0xFF;
+  }
+    
     public byte[] binaryCounter(int counter, int remainingBytes, int socketID){
         byte[] offset = new byte[4];
         
@@ -222,12 +226,13 @@ public class TCPClientManager extends Thread {
         
         
         String id = Integer.toBinaryString(socketID);
-        while (id.length() < 7){
+        while (id.length() < 6){
             id = "0"+id;
         }
         //System.out.println((remainingBytes == 0 ? 1 : 0) + id + bit25th);
         offset[3] = (byte) Integer.parseInt((remainingBytes == 0 ? 1 : 0) + id + bit25th);
-        System.out.println(Byte.valueOf(offset[3]));
+        //System.out.println((unsignedToBytes(offset[3]) + 0x100).substring(1));
+        System.out.println(Integer.toBinaryString((offset[3] & 0xFF) + 0x100).substring(1));
         
         return offset;
     }
