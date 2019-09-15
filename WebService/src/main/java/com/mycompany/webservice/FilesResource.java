@@ -42,8 +42,9 @@ public class FilesResource {
     @Produces(MediaType.APPLICATION_JSON)
     public String index() {
         Gson gson = new Gson();
+        ServerFiles serverFiles = ServerFiles.getInstance();
         try {
-            SharedFile[] files = ServerFiles.indexSharedFiles();
+            SharedFile[] files = serverFiles.indexSharedFiles();
             return gson.toJson(files);
         } catch (Exception e) {
             return gson.toJson("An error ocurred");
@@ -59,9 +60,9 @@ public class FilesResource {
     @Path("{filename}")
     @Produces(MediaType.APPLICATION_OCTET_STREAM)
     public File show(@PathParam("filename") String filename) {
-        Gson gson = new Gson();
+        ServerFiles serverFiles = ServerFiles.getInstance();
         try {
-            return ServerFiles.getSharedFile(filename);
+            return serverFiles.getSharedFile(filename);
         } catch (Exception e) {
             System.err.println(e);
         }

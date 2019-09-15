@@ -18,8 +18,23 @@ import java.util.Date;
 public class ServerFiles{
     static final String UPLOADS_FOLDER_PATH = System.getProperty("catalina.base") 
         + File.separator + "uploads";
+    private static ServerFiles instance;
     
-    public static SharedFile[] indexSharedFiles() {
+    private ServerFiles() {
+        File folder = new File(UPLOADS_FOLDER_PATH);
+        if (!folder.exists()) {
+            folder.mkdir();
+        }
+    }
+    
+    public static ServerFiles getInstance() {
+        if (instance == null) {
+            instance = new ServerFiles();
+        }
+        return instance;
+    }
+    
+    public SharedFile[] indexSharedFiles() {
         File folder = new File(UPLOADS_FOLDER_PATH);
         File[] listOfFiles = folder.listFiles();
         SharedFile[] parsedFiles = new SharedFile[listOfFiles.length];
@@ -42,7 +57,7 @@ public class ServerFiles{
         return parsedFiles;
     }
     
-    public static File getSharedFile(String filename) {
+    public File getSharedFile(String filename) {
         File response;
         try {
             response = new File(UPLOADS_FOLDER_PATH + File.separator + filename);
