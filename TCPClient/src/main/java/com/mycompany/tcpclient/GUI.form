@@ -300,7 +300,7 @@
                       <Table columnCount="3" rowCount="0">
                         <Column editable="false" title="Name" type="java.lang.String"/>
                         <Column editable="false" title="Created At" type="java.lang.String"/>
-                        <Column editable="false" title="Size (mb)" type="java.lang.String"/>
+                        <Column editable="false" title="Size" type="java.lang.String"/>
                       </Table>
                     </Property>
                     <Property name="columnModel" type="javax.swing.table.TableColumnModel" editor="org.netbeans.modules.form.editors2.TableColumnModelEditor">

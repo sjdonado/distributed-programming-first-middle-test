@@ -34,8 +34,10 @@ public class SharedFilesResource {
 
     /**
      * Creates a new instance of SharedFilesResource
-     */
+    */
+    ConnectionManagement cm;
     public SharedFilesResource() {
+        this.cm = ConnectionManagement.getInstance();
     }
 
     /**
@@ -46,14 +48,21 @@ public class SharedFilesResource {
     @Produces(MediaType.APPLICATION_JSON)
     public Response index() {
         try{
-            String endpoint="http://localhost:8080/WebService/webresources/files";
+            String endpoint = "http://" + this.cm.getServer() 
+                + "/WebService/webresources/files";
             String methodType="GET";
             URL url = new URL(endpoint);
-            HttpURLConnection urlConnection=(HttpURLConnection)url.openConnection();
+            HttpURLConnection urlConnection = (HttpURLConnection) 
+                url.openConnection();
             urlConnection.setRequestMethod(methodType);
             urlConnection.setDoOutput(true);
-            urlConnection.setRequestProperty("Content-type", MediaType.APPLICATION_JSON);
-            urlConnection.setRequestProperty("Accept", MediaType.APPLICATION_JSON);
+            urlConnection.setRequestProperty(
+                "Content-type", MediaType.APPLICATION_JSON
+            );
+            urlConnection.setRequestProperty(
+                "Accept",
+                MediaType.APPLICATION_JSON
+            );
             int httpResponseCode = urlConnection.getResponseCode();
             if (httpResponseCode == HttpURLConnection.HTTP_OK) {
                 BufferedReader in = new BufferedReader(
@@ -83,7 +92,8 @@ public class SharedFilesResource {
     @Produces(MediaType.APPLICATION_OCTET_STREAM)
     public Response show(@PathParam("filename") String filename) {
         try{
-            String endpoint = "http://localhost:8080/WebService/webresources/files";
+            String endpoint = "http://" + this.cm.getServer() 
+                + "/WebService/webresources/files";
             URL url = new URL(endpoint + "/" + filename);
             File file = new File(filename);
             FileUtils.copyURLToFile(url, file);

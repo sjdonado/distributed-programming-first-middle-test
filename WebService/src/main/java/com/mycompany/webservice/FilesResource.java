@@ -10,7 +10,6 @@ import com.mycompany.webmanagerclient.SharedFile;
 import com.server.files.ServerFiles;
 import java.io.File;
 import java.net.URLDecoder;
-import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import javax.ws.rs.core.Context;

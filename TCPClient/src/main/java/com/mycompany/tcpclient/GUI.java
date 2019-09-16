@@ -195,7 +195,7 @@ public class GUI extends javax.swing.JFrame implements TCPServiceManagerCallerIn
 
             },
             new String [] {
-                "Name", "Created At", "Size (mb)"
+                "Name", "Created At", "Size"
             }
         ) {
             Class[] types = new Class [] {
