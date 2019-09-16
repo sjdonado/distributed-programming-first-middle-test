@@ -65,12 +65,12 @@ public class GUI extends javax.swing.JFrame implements TCPServiceManagerCallerIn
         fileCombo = new javax.swing.JComboBox<>();
         selectDownFile = new javax.swing.JButton();
         jLabel3 = new javax.swing.JLabel();
-        labelServerMessage = new javax.swing.JLabel();
         jTabbedPane1 = new javax.swing.JTabbedPane();
         jPanel1 = new javax.swing.JPanel();
         jLabel1 = new javax.swing.JLabel();
         textServerIP = new javax.swing.JTextField();
         jLabel2 = new javax.swing.JLabel();
+        labelServerMessage = new javax.swing.JLabel();
         textServerPort = new javax.swing.JTextField();
         buttonConnectToServer = new javax.swing.JButton();
         buttonSelectFile = new javax.swing.JButton();
@@ -136,6 +136,8 @@ public class GUI extends javax.swing.JFrame implements TCPServiceManagerCallerIn
 
         jLabel2.setText("Port:");
 
+        labelServerMessage.setText("test");
+
         textServerPort.setText("9090");
 
         buttonConnectToServer.setText("Connect");
@@ -170,7 +172,8 @@ public class GUI extends javax.swing.JFrame implements TCPServiceManagerCallerIn
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(textServerPort, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(buttonConnectToServer)))
+                        .addComponent(buttonConnectToServer))
+                    .addComponent(labelServerMessage, javax.swing.GroupLayout.PREFERRED_SIZE, 349, javax.swing.GroupLayout.PREFERRED_SIZE))
                 .addContainerGap(93, Short.MAX_VALUE))
         );
         jPanel1Layout.setVerticalGroup(
@@ -185,7 +188,9 @@ public class GUI extends javax.swing.JFrame implements TCPServiceManagerCallerIn
                     .addComponent(buttonConnectToServer))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(buttonSelectFile)
-                .addContainerGap(191, Short.MAX_VALUE))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(labelServerMessage, javax.swing.GroupLayout.PREFERRED_SIZE, 27, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addContainerGap(44, Short.MAX_VALUE))
         );
 
         jTabbedPane1.addTab("Upload", jPanel1);
@@ -311,18 +316,13 @@ public class GUI extends javax.swing.JFrame implements TCPServiceManagerCallerIn
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(layout.createSequentialGroup()
                 .addContainerGap()
-                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addGroup(layout.createSequentialGroup()
-                        .addComponent(labelServerMessage, javax.swing.GroupLayout.PREFERRED_SIZE, 349, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addGap(0, 0, Short.MAX_VALUE))
-                    .addComponent(jTabbedPane1)))
+                .addComponent(jTabbedPane1))
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(layout.createSequentialGroup()
                 .addComponent(jTabbedPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 211, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(labelServerMessage))
+                .addGap(6, 6, 6))
         );
 
         pack();

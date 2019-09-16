@@ -85,10 +85,8 @@ public class UDPReceptor implements UDPManagerCallerInterface {
             receivedChunks.add(new Chunk(receptorId, clientSocketId, position,
                     end, tempChunkFile.getAbsolutePath()));
             
-            Logger.getLogger(UDPReceptor.class.getName()).log(
-                Level.INFO,
-                tempChunkFile.getAbsolutePath()
-            );
+            Logger.getLogger(UDPReceptor.class.getName()).log(Level.INFO,
+                    "New CHUNK temp file => {0}", tempChunkFile.getAbsolutePath());
             
             if (end) {
                 if (Utils.createFileByClientSocketId(clientSocketId,
