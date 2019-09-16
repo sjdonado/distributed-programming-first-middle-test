@@ -45,11 +45,12 @@ public class ServerFiles{
                 try {
                     BasicFileAttributes attrs = Files
                         .readAttributes(file.toPath(), BasicFileAttributes.class);
-                    parsedFiles.add(new SharedFile(
+                    SharedFile sharedFile = new SharedFile(
                         file.getName(), 
                         file.length(),
-                        new Date(attrs.creationTime().toMillis())
+                        new Date(attrs.creationTime().toMillis()
                     ));
+                    parsedFiles.add(sharedFile);
                 } catch (IOException e) {
                     System.err.println(e);
                 }

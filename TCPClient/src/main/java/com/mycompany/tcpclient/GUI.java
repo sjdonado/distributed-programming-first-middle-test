@@ -385,7 +385,7 @@ public class GUI extends javax.swing.JFrame implements TCPServiceManagerCallerIn
         } else {
             JOptionPane.showMessageDialog(
                 jFrame1, 
-                "File didn't downloaded successfully",
+                "File didn't download successfully",
                 "Error",
                 JOptionPane.ERROR_MESSAGE
             );
