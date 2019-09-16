@@ -12,6 +12,8 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import org.apache.commons.io.FileUtils;
 
 /**
@@ -29,7 +31,11 @@ public class WebManagerClient {
     
     public boolean downloadFile(String filename) {
         try{
-            URL url = new URL(this.BASE_URL + "/" + filename);
+            URL url = new URL(
+                this.BASE_URL 
+                + "/" 
+                + URLEncoder.encode(filename, StandardCharsets.UTF_8.toString())
+            );
             File file = new File(DOWNLOAD_DIR + File.separator + filename);
             FileUtils.copyURLToFile(url, file);
             return true;

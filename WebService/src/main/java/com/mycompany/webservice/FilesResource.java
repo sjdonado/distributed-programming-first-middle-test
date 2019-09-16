@@ -9,6 +9,9 @@ import com.google.gson.Gson;
 import com.mycompany.webmanagerclient.SharedFile;
 import com.server.files.ServerFiles;
 import java.io.File;
+import java.net.URLDecoder;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.UriInfo;
@@ -64,7 +67,9 @@ public class FilesResource {
     public Response show(@PathParam("filename") String filename) {
         ServerFiles serverFiles = ServerFiles.getInstance();
         try {
-            File file = serverFiles.getSharedFile(filename);
+            File file = serverFiles.getSharedFile(
+                URLDecoder.decode(filename, StandardCharsets.UTF_8.toString())
+            );
             return Response.ok(file).build();
         } catch (Exception e) {
             System.err.println(e);
