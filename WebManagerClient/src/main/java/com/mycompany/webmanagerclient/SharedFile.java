@@ -3,7 +3,7 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package com.server.files;
+package com.mycompany.webmanagerclient;
 
 import java.util.Date;
 
@@ -15,7 +15,7 @@ public class SharedFile {
     private String name;
     private long size;
     private Date createdAt;
-
+    
     public SharedFile(String name, long size, Date createdAt) {
         this.name = name;
         this.size = size;
@@ -45,5 +45,4 @@ public class SharedFile {
     public void setCreatedAt(Date createdAt) {
         this.createdAt = createdAt;
     }
-    
 }

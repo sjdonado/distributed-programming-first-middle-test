@@ -6,9 +6,10 @@
 package com.mycompany.webservice;
 
 import com.google.gson.Gson;
+import com.mycompany.webmanagerclient.SharedFile;
 import com.server.files.ServerFiles;
-import com.server.files.SharedFile;
 import java.io.File;
+import java.util.ArrayList;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.UriInfo;
 import javax.ws.rs.Produces;
@@ -45,7 +46,7 @@ public class FilesResource {
         Gson gson = new Gson();
         ServerFiles serverFiles = ServerFiles.getInstance();
         try {
-            SharedFile[] files = serverFiles.indexSharedFiles();
+            ArrayList<SharedFile> files = serverFiles.indexSharedFiles();
             return Response.ok(gson.toJson(files)).build();
         } catch (Exception e) {
             return Response.serverError().build();

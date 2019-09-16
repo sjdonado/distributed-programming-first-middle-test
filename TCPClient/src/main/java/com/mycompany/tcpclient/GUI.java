@@ -7,7 +7,8 @@ package com.mycompany.tcpclient;
 
 import com.mycompany.tcpmanager.TCPClientManager;
 import com.mycompany.tcpmanager.TCPServiceManagerCallerInterface;
-import com.server.files.SharedFile;
+import com.mycompany.webmanagerclient.SharedFile;
+import com.mycompany.webmanagerclient.WebManagerClient;
 import java.io.File;
 import java.net.Socket;
 import java.text.SimpleDateFormat;
