@@ -12,8 +12,10 @@ import com.mycompany.udpmanager.Utils;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import org.apache.commons.io.FileUtils;
 
 /**
  *
@@ -49,11 +51,12 @@ public class UDPReceptor implements UDPManagerCallerInterface {
     public void dataReceived(int receptorId, String ipAdress,
             int sourcePort, byte[] data) {
         try {
-//            Get from header
-            int clientSocketId = 0, position = 0;
-            boolean end = false;
             
-            Utils.unpackHeader(data, clientSocketId, position, end);
+            int clientSocketId = Utils.getClientSocketIdFromHeader(data);
+            int position = Utils.getPositionFromHeader(data);
+            boolean end = Utils.getFinalBitFromHeader(data);
+            
+            byte[] headlessChunk = Arrays.copyOfRange(data,4,1500);
             
             Logger.getLogger(UDPReceptor.class.getName()).log(
                 Level.INFO,
@@ -75,11 +78,17 @@ public class UDPReceptor implements UDPManagerCallerInterface {
                 String.format("HEAD[3] => %8s", Integer.toBinaryString(data[3] & 0xFF)).replace(' ', '0')
             );
             
-            File tempChunkFile = File.createTempFile("temp", null);
+            File tempChunkFile = File.createTempFile("chunk", null);
+            FileUtils.writeByteArrayToFile(tempChunkFile,headlessChunk);
             tempChunkFile.deleteOnExit();
 
             receivedChunks.add(new Chunk(receptorId, clientSocketId, position,
                     end, tempChunkFile.getAbsolutePath()));
+            
+            Logger.getLogger(UDPReceptor.class.getName()).log(
+                Level.INFO,
+                tempChunkFile.getAbsolutePath()
+            );
             
             if (end) {
                 if (Utils.createFileByClientSocketId(clientSocketId,
