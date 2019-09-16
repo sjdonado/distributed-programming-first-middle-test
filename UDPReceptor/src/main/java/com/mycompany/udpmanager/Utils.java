@@ -15,7 +15,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.logging.Level;
@@ -79,12 +78,23 @@ public class Utils {
     }
     
     public static String getFilePath(byte[] data) {
-        String filename = new String(data).replace("\0", "");
+        String parsedData = new String(data);
+        String filename = parsedData.substring(0, parsedData.indexOf("/*/"));
         Logger.getLogger(Utils.class.getName()).log(
             Level.INFO,
             "FILENAME => {0}", filename
         );
         return "files/" + filename;
+    }
+    
+    public static long getFileSize(byte[] data) {
+        String parsedData = new String(data).replace("\0", "");
+        long size = Long.parseLong(parsedData.substring(parsedData.indexOf("/*/"), parsedData.length() - 1));
+        Logger.getLogger(Utils.class.getName()).log(
+            Level.INFO,
+            "FILE SIZE => {0}", size
+        );
+        return size;
     }
     
     public static File createFileByClientSocketId(int clientSocketId,
