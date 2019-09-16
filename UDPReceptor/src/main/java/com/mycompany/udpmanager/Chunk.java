@@ -13,15 +13,12 @@ public class Chunk {
     private final int receptorId;
     private final int clientSocketId;
     private final int position;
-    private final boolean end;
     private final String filePath;
 
-    public Chunk(int receptorId, int clientSocketId, int position,
-            boolean end, String filePath) {
+    public Chunk(int receptorId, int clientSocketId, int position, String filePath) {
         this.receptorId = receptorId;
         this.clientSocketId = clientSocketId;
         this.position = position;
-        this.end = end;
         this.filePath = filePath;
     }
 
@@ -35,10 +32,6 @@ public class Chunk {
 
     public int getPosition() {
         return position;
-    }
-
-    public boolean isEnd() {
-        return end;
     }
 
     public String getFilePath() {

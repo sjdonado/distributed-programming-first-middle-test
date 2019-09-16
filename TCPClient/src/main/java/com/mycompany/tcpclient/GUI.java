@@ -136,7 +136,7 @@ public class GUI extends javax.swing.JFrame implements TCPServiceManagerCallerIn
 
         jLabel2.setText("Port:");
 
-        labelServerMessage.setText("test");
+        labelServerMessage.setText(" ");
 
         textServerPort.setText("9090");
 

@@ -191,7 +191,7 @@
             </Component>
             <Component class="javax.swing.JLabel" name="labelServerMessage">
               <Properties>
-                <Property name="text" type="java.lang.String" value="test"/>
+                <Property name="text" type="java.lang.String" value=" "/>
               </Properties>
             </Component>
             <Component class="javax.swing.JTextField" name="textServerPort">

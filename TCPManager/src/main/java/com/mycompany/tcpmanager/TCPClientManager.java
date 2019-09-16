@@ -13,6 +13,7 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.net.Socket;
+import java.util.Arrays;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.apache.commons.io.IOUtils;
@@ -209,7 +210,26 @@ public class TCPClientManager extends Thread {
         try {
             if (this.clientSocket.isConnected()) {
                 BufferedInputStream in = new BufferedInputStream(new FileInputStream(file));
-                IOUtils.copy(in, this.writer);
+//                IOUtils.copy(in, this.writer);
+                int data, flushCounter = 0, dataCounter = 0;
+                while ((data = in.read()) != -1) {
+                    this.writer.write(data);
+                    dataCounter++;
+                    flushCounter++;
+                    if (flushCounter == 1500) {
+                        this.writer.flush();
+                        flushCounter = 0;
+                    }
+                }
+                while (dataCounter % 1500 != 0) {
+                    this.writer.write(0);
+                    dataCounter++;
+                }
+                if (flushCounter != 0) this.writer.flush();
+                byte [] metadata = file.getName().getBytes();
+                for (int index = 0; index < metadata.length - 1; index++) {
+                    this.writer.write(metadata[index]);
+                }
                 this.writer.flush();
             }
         } catch (IOException ex) {

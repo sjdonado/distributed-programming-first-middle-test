@@ -15,6 +15,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.logging.Level;
@@ -31,24 +32,24 @@ public class Utils {
         return b & 0xFF;
     }
     
-    public static int getClientSocketIdFromHeader(byte[] data){
+    public static int getClientSocketIdFromHeader(byte[] data) {
         String byte4 = Integer.toBinaryString((data[3] & 0xFF) + 0x100).substring(1);
         
         int clientSocketId = Integer.parseInt(byte4.substring(1, 7));
         return clientSocketId;
     }
     
-    public static int getPositionFromHeader(byte[] data){
+    public static int getPositionFromHeader(byte[] data) {
         int byte1 = unsignedToBytes(data[0]);
         int byte2 = unsignedToBytes(data[1]) * 2^(8);
         int byte3 = unsignedToBytes(data[2]) * 2^(16);
         String byte4 = Integer.toBinaryString((data[3] & 0xFF) + 0x100).substring(1);
         int pos = Integer.parseInt(byte4.substring(7)) * 2^(24);
-        int position = byte1+byte2+byte3+pos;
+        int position = byte1 + byte2 + byte3 + pos;
         return position;
     }
     
-    public static boolean getFinalBitFromHeader(byte[] data){
+    public static boolean getFinalBitFromHeader(byte[] data) {
         String byte4 = Integer.toBinaryString((data[3] & 0xFF) + 0x100).substring(1);
         int fin = Integer.parseInt(byte4.substring(0,1));
         boolean end = fin != 0;
@@ -77,9 +78,17 @@ public class Utils {
         return offset;
     }
     
-    public static boolean createFileByClientSocketId(int clientSocketId,
+    public static String getFilePath(byte[] data) {
+        String filename = new String(data).replace("\0", "");
+        Logger.getLogger(Utils.class.getName()).log(
+            Level.INFO,
+            "FILENAME => {0}", filename
+        );
+        return "files/" + filename;
+    }
+    
+    public static File createFileByClientSocketId(int clientSocketId,
             String filePath, ArrayList<Chunk> receivedChunks) {
-
         File newFile = new File(filePath);
         ArrayList<Chunk> found = new ArrayList<>();
 
@@ -100,10 +109,10 @@ public class Utils {
         }
         try {
             joinFiles(files, newFile);
-            return true;
+            return newFile;
         } catch (IOException ex) {
             Logger.getLogger(Utils.class.getName()).log(Level.SEVERE, null, ex);
-            return false;
+            return null;
         }
     }
     
