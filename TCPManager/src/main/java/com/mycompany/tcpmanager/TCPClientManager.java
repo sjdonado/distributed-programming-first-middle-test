@@ -8,6 +8,7 @@ package com.mycompany.tcpmanager;
 import com.mycompany.udpmanager.Utils;
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
+import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -131,7 +132,10 @@ public class TCPClientManager extends Thread {
                     int position = 0;
                     while ((data = this.reader.read()) != -1) {
                         remainingBytes = this.reader.available();
-                        chunk[index] = (byte) data;
+                        byte stream = (byte) data;
+                        Logger.getLogger(
+                            TCPClientManager.class.getName()).log(Level.INFO, new String(new byte[]{stream}));
+                        chunk[index] = stream;
                         if (index == 1499 || remainingBytes == 0) {
                             if (index == 5) {
                                 if ((chunk[4] &255) == 0 && (chunk[5] &255) == 0) {
@@ -200,7 +204,7 @@ public class TCPClientManager extends Thread {
                 this.writer.write(message, 0, 2);
                 this.writer.flush();
             }
-        } catch (Exception ex) {
+        } catch (IOException ex) {
             this.caller.errorHasBeenThrown(ex);
         }
     }
@@ -208,8 +212,34 @@ public class TCPClientManager extends Thread {
     public void sendFile(File file) {
         try {
             if (this.clientSocket.isConnected()) {
-                BufferedInputStream in = new BufferedInputStream(new FileInputStream(file));
-                IOUtils.copy(in, this.writer);
+                BufferedInputStream fileInputStream = new BufferedInputStream(new FileInputStream(file));
+                int data, flushCounter = 0, dataCounter = 0;
+                while ((data = fileInputStream.read()) != -1) {
+                    this.writer.write(data);
+                    dataCounter++;
+                    flushCounter++;
+                    if (flushCounter == 1500) {
+                        this.writer.flush();
+                        flushCounter = 0;
+                    }
+                }
+                
+                while (dataCounter % 1500 != 0) {
+                    this.writer.write(0);
+                    dataCounter++;
+                    flushCounter++;
+                }
+                if (flushCounter != 0) this.writer.flush();
+                
+//                while (fileInputStream.available())
+                
+                String metadata = file.getName() + "/*/" + file.length();
+                BufferedInputStream filenameStream = new BufferedInputStream(new ByteArrayInputStream(metadata.getBytes("UTF-8")));
+                
+                Logger.getLogger(TCPClientManager.class.getName())
+                    .log(Level.INFO, "METADATA - {0} {1}", new Object[]{metadata, new String(metadata.getBytes("UTF-8"))});
+                
+                IOUtils.copy(filenameStream, this.writer);
                 this.writer.flush();
             }
         } catch (IOException ex) {

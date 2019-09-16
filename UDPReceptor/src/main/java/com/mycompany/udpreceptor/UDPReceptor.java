@@ -12,8 +12,10 @@ import com.mycompany.udpmanager.Utils;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import org.apache.commons.io.FileUtils;
 
 /**
  *
@@ -49,57 +51,51 @@ public class UDPReceptor implements UDPManagerCallerInterface {
     public void dataReceived(int receptorId, String ipAdress,
             int sourcePort, byte[] data) {
         try {
-//            Get from header
-            int clientSocketId = 0, position = 0;
-            boolean end = false;
-            
-            Utils.unpackHeader(data, clientSocketId, position, end);
-            
-            Logger.getLogger(UDPReceptor.class.getName()).log(
-                Level.INFO,
-                String.format("HEAD[0] => %8s", Integer.toBinaryString(data[0] & 0xFF)).replace(' ', '0')
-            );
-            
-            Logger.getLogger(UDPReceptor.class.getName()).log(
-                Level.INFO,
-                String.format("HEAD[1] => %8s", Integer.toBinaryString(data[1] & 0xFF)).replace(' ', '0')
-            );
-            
-            Logger.getLogger(UDPReceptor.class.getName()).log(
-                Level.INFO,
-                String.format("HEAD[2] => %8s", Integer.toBinaryString(data[2] & 0xFF)).replace(' ', '0')
-            );
-            
-            Logger.getLogger(UDPReceptor.class.getName()).log(
-                Level.INFO,
-                String.format("HEAD[3] => %8s", Integer.toBinaryString(data[3] & 0xFF)).replace(' ', '0')
-            );
-            
-            File tempChunkFile = File.createTempFile("temp", null);
-            tempChunkFile.deleteOnExit();
+            int clientSocketId = Utils.getClientSocketIdFromHeader(data);
+            int position = Utils.getPositionFromHeader(data);
+            boolean end = Utils.getFinalBitFromHeader(data);
 
-            receivedChunks.add(new Chunk(receptorId, clientSocketId, position,
-                    end, tempChunkFile.getAbsolutePath()));
+            byte[] headlessChunk = Arrays.copyOfRange(data, 4, data.length - 1);
             
-            if (end) {
-                if (Utils.createFileByClientSocketId(clientSocketId,
-                        "file", receivedChunks)) {
-                    receptors.get(receptorId).sendMessage(
-                            Integer.toBinaryString(clientSocketId).getBytes());
+            Logger.getLogger(UDPReceptor.class.getName()).log(
+                Level.INFO,
+                "CHUNK - ReceptorId: {0} - |{1}|{2}|{3}|{4}| - {5}:{6} \n DATA: {7}",
+                new Object[] {
+                    receptorId,
+                    String.format("HEAD[0] => %8s", Integer.toBinaryString(data[0] & 0xFF)).replace(' ', '0'),
+                    String.format("HEAD[1] => %8s", Integer.toBinaryString(data[1] & 0xFF)).replace(' ', '0'),
+                    String.format("HEAD[2] => %8s", Integer.toBinaryString(data[2] & 0xFF)).replace(' ', '0'),
+                    String.format("HEAD[3] => %8s", Integer.toBinaryString(data[3] & 0xFF)).replace(' ', '0'),
+                    ipAdress,
+                    sourcePort,
+                    new String(headlessChunk)
                 }
+            );
+
+            if (end) {
+                File finalFile = Utils.createFileByClientSocketId(clientSocketId,
+                        Utils.getFilePath(headlessChunk), receivedChunks);
+                if (finalFile != null) {
+//                    receptors.get(receptorId).sendMessage(
+//                            Integer.toBinaryString(clientSocketId).getBytes());
+
+                    Logger.getLogger(UDPReceptor.class.getName()).log(Level.INFO,
+                        "FINAL file created => {0}", finalFile.getAbsolutePath());
+                }
+            } else {
+                File tempChunkFile = File.createTempFile("chunk", null);
+                FileUtils.writeByteArrayToFile(tempChunkFile, headlessChunk);
+                tempChunkFile.deleteOnExit();
+
+                receivedChunks.add(new Chunk(receptorId, clientSocketId,
+                        position, tempChunkFile.getAbsolutePath()));
+                
+                Logger.getLogger(UDPReceptor.class.getName()).log(Level.INFO,
+                    "CHUNK temp file => {0}", tempChunkFile.getAbsolutePath());
             }
         } catch (IOException ex) {
             Logger.getLogger(UDPReceptor.class.getName()).log(Level.SEVERE, null, ex);
         }
-        Logger.getLogger(UDPReceptor.class.getName()).log(
-                Level.INFO,
-                "CHUNK - ReceptorId: {0} - {1}:{2}=> {3}", new Object[]{
-                    receptorId,
-                    ipAdress,
-                    sourcePort,
-                    new String(data)
-                }
-        );
     }
 
     @Override

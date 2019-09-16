@@ -30,17 +30,29 @@ public class Utils {
     private static int unsignedToBytes(byte b) {
         return b & 0xFF;
     }
-   
-    public static void unpackHeader(byte[] data, int clientSocketId, int position, boolean end){
-        int byte1 = unsignedToBytes(data[1496]);
-        int byte2 = unsignedToBytes(data[1497]) * 2^(8);
-        int byte3 = unsignedToBytes(data[1498]) * 2^(16);
-        String byte4 = Integer.toBinaryString((data[1499] & 0xFF) + 0x100).substring(1);
+    
+    public static int getClientSocketIdFromHeader(byte[] data) {
+        String byte4 = Integer.toBinaryString((data[3] & 0xFF) + 0x100).substring(1);
         
-        clientSocketId = Integer.parseInt(byte4.substring(1, 7));
+        int clientSocketId = Integer.parseInt(byte4.substring(1, 7));
+        return clientSocketId;
+    }
+    
+    public static int getPositionFromHeader(byte[] data) {
+        int byte1 = unsignedToBytes(data[0]);
+        int byte2 = unsignedToBytes(data[1]) * 2^(8);
+        int byte3 = unsignedToBytes(data[2]) * 2^(16);
+        String byte4 = Integer.toBinaryString((data[3] & 0xFF) + 0x100).substring(1);
         int pos = Integer.parseInt(byte4.substring(7)) * 2^(24);
-        position = byte1+byte2+byte3+pos;
-        end = !"0".equals(byte4.substring(0,1));
+        int position = byte1 + byte2 + byte3 + pos;
+        return position;
+    }
+    
+    public static boolean getFinalBitFromHeader(byte[] data) {
+        String byte4 = Integer.toBinaryString((data[3] & 0xFF) + 0x100).substring(1);
+        int fin = Integer.parseInt(byte4.substring(0,1));
+        boolean end = fin != 0;
+        return end;
     }
     
     public static byte[] createHeader(int position, int remainingBytes, int socketID) {
@@ -65,9 +77,28 @@ public class Utils {
         return offset;
     }
     
-    public static boolean createFileByClientSocketId(int clientSocketId,
+    public static String getFilePath(byte[] data) {
+        String parsedData = new String(data);
+        String filename = parsedData.substring(0, parsedData.indexOf("/*/"));
+        Logger.getLogger(Utils.class.getName()).log(
+            Level.INFO,
+            "FILENAME => {0}", filename
+        );
+        return "files/" + filename;
+    }
+    
+    public static long getFileSize(byte[] data) {
+        String parsedData = new String(data).replace("\0", "");
+        long size = Long.parseLong(parsedData.substring(parsedData.indexOf("/*/"), parsedData.length() - 1));
+        Logger.getLogger(Utils.class.getName()).log(
+            Level.INFO,
+            "FILE SIZE => {0}", size
+        );
+        return size;
+    }
+    
+    public static File createFileByClientSocketId(int clientSocketId,
             String filePath, ArrayList<Chunk> receivedChunks) {
-
         File newFile = new File(filePath);
         ArrayList<Chunk> found = new ArrayList<>();
 
@@ -88,10 +119,10 @@ public class Utils {
         }
         try {
             joinFiles(files, newFile);
-            return true;
+            return newFile;
         } catch (IOException ex) {
             Logger.getLogger(Utils.class.getName()).log(Level.SEVERE, null, ex);
-            return false;
+            return null;
         }
     }
     

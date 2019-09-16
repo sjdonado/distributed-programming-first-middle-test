@@ -52,11 +52,11 @@ public class UDPManager extends Thread {
             if (initializeMulticastSocket()) {
                 while (this.isEnabled) {
                     multicastSocket.receive(datagramPacket);
-                    if (datagramPacket.getLength() <= 6) {
-                        int socketClientId = Integer.parseInt(
-                                new String(datagramPacket.getData()));
-                        this.caller.clientUploadFileFinished(socketClientId);
-                    }
+//                    if (datagramPacket.getLength() <= 6) {
+//                        int socketClientId = Integer.parseInt(
+//                                new String(datagramPacket.getData()));
+//                        this.caller.clientUploadFileFinished(socketClientId);
+//                    }
                     this.caller.dataReceived(
                         this.receptorId,
                         datagramPacket.getAddress().toString(),
