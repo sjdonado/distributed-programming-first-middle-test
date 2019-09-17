@@ -220,34 +220,26 @@ public class TCPClientManager extends Thread {
     public void sendFile(File file) {
         try {
             if (this.clientSocket.isConnected()) {
-                BufferedInputStream fileInputStream = new BufferedInputStream(new FileInputStream(file));
-                int data, flushCounter = 0, dataCounter = 0;
-                while ((data = fileInputStream.read()) != -1) {
-                    this.writer.write(data);
-                    dataCounter++;
-                    flushCounter++;
-                    if (flushCounter == 1500) {
-                        this.writer.flush();
-                        flushCounter = 0;
-                    }
-                }
-                
-                while (dataCounter % 1496 != 0) {
-                    this.writer.write(0);
-                    dataCounter++;
-                    flushCounter++;
-                }
-                if (flushCounter != 0) this.writer.flush();
-                
-//                while (fileInputStream.available())
                 
                 String metadata = file.getName() + "/*/" + file.length();
+                if (metadata.length() < 1496) {
+                    char[] chars = new char[1496 - metadata.length()];
+                    Arrays.fill(chars, '\0');
+                    metadata += new String(chars);
+                }
                 BufferedInputStream filenameStream = new BufferedInputStream(new ByteArrayInputStream(metadata.getBytes("UTF-8")));
                 
                 Logger.getLogger(TCPClientManager.class.getName())
                     .log(Level.INFO, "METADATA - {0} {1}", new Object[]{metadata, new String(metadata.getBytes("UTF-8"))});
                 
                 IOUtils.copy(filenameStream, this.writer);
+
+                this.writer.flush();
+
+                BufferedInputStream fileInputStream = new BufferedInputStream(new FileInputStream(file));
+                
+                IOUtils.copy(fileInputStream, this.writer);
+                
                 this.writer.flush();
             }
         } catch (IOException ex) {

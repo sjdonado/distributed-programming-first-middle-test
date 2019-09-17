@@ -6,6 +6,7 @@
 package com.mycompany.udpreceptor;
 
 import com.mycompany.udpmanager.Chunk;
+import com.mycompany.udpmanager.ClientFile;
 import com.mycompany.udpmanager.UDPManager;
 import com.mycompany.udpmanager.UDPManagerCallerInterface;
 import com.mycompany.udpmanager.Utils;
@@ -24,7 +25,7 @@ import org.apache.commons.io.FileUtils;
 public class UDPReceptor implements UDPManagerCallerInterface {
     private final int NUMBER_OF_RECEPTORS = 1;
     private final ArrayList<UDPManager> receptors = new ArrayList<>();
-    private final ArrayList<Chunk> receivedChunks = new ArrayList<>();
+    private final ArrayList<ClientFile> clientFiles = new ArrayList<>();
     
     public UDPReceptor() {
         initializeReceptors();
@@ -51,9 +52,10 @@ public class UDPReceptor implements UDPManagerCallerInterface {
     public void dataReceived(int receptorId, String ipAdress,
             int sourcePort, byte[] data) {
         try {
+            ClientFile clientFile;
             int clientSocketId = Utils.getClientSocketIdFromHeader(data);
             int position = Utils.getPositionFromHeader(data);
-            boolean end = Utils.getFinalBitFromHeader(data);
+            boolean finalChunk = Utils.getFinalBitFromHeader(data);
 
             byte[] headlessChunk = Arrays.copyOfRange(data, 5, data.length - 1);
             
@@ -76,27 +78,33 @@ public class UDPReceptor implements UDPManagerCallerInterface {
                     new String(headlessChunk),
                 }
             );
-
-            if (end) {
-                File finalFile = Utils.createFileByClientSocketId(clientSocketId,
-                        Utils.getFilePath(headlessChunk), receivedChunks);
-                if (finalFile != null) {
-//                    receptors.get(receptorId).sendMessage(
-//                            Integer.toBinaryString(clientSocketId).getBytes());
-
-                    Logger.getLogger(UDPReceptor.class.getName()).log(Level.INFO,
-                        "FINAL file created => {0}", finalFile.getAbsolutePath());
-                }
+            
+            if ((clientFile = Utils.getClientFile(clientSocketId, clientFiles)) == null) {
+                clientFiles.add(new ClientFile(receptorId, clientSocketId,
+                        Utils.getFilePath(headlessChunk),
+                        Utils.getFileSize(data))
+                );
             } else {
                 File tempChunkFile = File.createTempFile("chunk", null);
                 FileUtils.writeByteArrayToFile(tempChunkFile, headlessChunk);
                 tempChunkFile.deleteOnExit();
-
-                receivedChunks.add(new Chunk(receptorId, clientSocketId,
-                        position, tempChunkFile.getAbsolutePath()));
-                
+                clientFile.addChunk(new Chunk(position, 
+                        tempChunkFile.getAbsolutePath()));
                 Logger.getLogger(UDPReceptor.class.getName()).log(Level.INFO,
-                    "CHUNK temp file => {0}", tempChunkFile.getAbsolutePath());
+                        "CHUNK temp file => {0}", tempChunkFile.getAbsolutePath());
+                if (finalChunk) {
+                    File finalFile = Utils.createFileByClientSocketId(
+                        clientFile.getFilePath(),
+                        clientFile.getChunks()
+                    );
+                    if (finalFile != null) {
+    //                    receptors.get(receptorId).sendMessage(
+    //                            Integer.toBinaryString(clientSocketId).getBytes());
+                        Logger.getLogger(UDPReceptor.class.getName()).log(Level.INFO,
+                            "FINAL file created => {0}", finalFile.getAbsolutePath());
+                    }
+                    clientFiles.remove(clientFile);
+                }
             }
         } catch (IOException ex) {
             Logger.getLogger(UDPReceptor.class.getName()).log(Level.SEVERE, null, ex);

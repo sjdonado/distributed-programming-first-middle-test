@@ -89,7 +89,10 @@ public class Utils {
     
     public static long getFileSize(byte[] data) {
         String parsedData = new String(data).replace("\0", "");
-        long size = Long.parseLong(parsedData.substring(parsedData.indexOf("/*/"), parsedData.length() - 1));
+        long size = Long.parseLong(parsedData.substring(
+                parsedData.indexOf("/*/") + 3,
+                parsedData.length() - 1)
+        );
         Logger.getLogger(Utils.class.getName()).log(
             Level.INFO,
             "FILE SIZE => {0}", size
@@ -97,25 +100,28 @@ public class Utils {
         return size;
     }
     
-    public static File createFileByClientSocketId(int clientSocketId,
-            String filePath, ArrayList<Chunk> receivedChunks) {
-        File newFile = new File(filePath);
-        ArrayList<Chunk> found = new ArrayList<>();
-
-        for (Chunk receivedChunk : receivedChunks) {
-            if (receivedChunk.getClientSocketId() == clientSocketId) {
-                found.add(receivedChunk);
+    public static ClientFile getClientFile(int clientSocketId,
+            ArrayList<ClientFile> clientfiles) {
+        for (ClientFile clientFile : clientfiles) {
+            if (clientFile.getClientSocketId() == clientSocketId) {
+                return clientFile;
             }
         }
+        return null;
+    }
+    
+    public static File createFileByClientSocketId(String filePath,
+            ArrayList<Chunk> fileChunks) {
+        File newFile = new File(filePath);
         
         Comparator<Chunk> comparator = (Chunk c1, Chunk c2) ->
                 (c1.getPosition() + "").compareTo((c2.getPosition() + ""));
         
-        Collections.sort(found, comparator);
+        Collections.sort(fileChunks, comparator);
         
-        File[] files = new File[found.size()];
-        for (int index = 0; index < found.size(); index++) {
-            files[index] = new File(found.get(index).getFilePath());
+        File[] files = new File[fileChunks.size()];
+        for (int index = 0; index < fileChunks.size(); index++) {
+            files[index] = new File(fileChunks.get(index).getFilePath());
         }
         try {
             joinFiles(files, newFile);
