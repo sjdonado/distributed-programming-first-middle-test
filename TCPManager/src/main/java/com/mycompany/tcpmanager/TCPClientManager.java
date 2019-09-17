@@ -14,6 +14,7 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.net.Socket;
+import java.util.Arrays;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.apache.commons.io.IOUtils;
@@ -133,8 +134,8 @@ public class TCPClientManager extends Thread {
                     while ((data = this.reader.read()) != -1) {
                         remainingBytes = this.reader.available();
                         byte stream = (byte) data;
-                        Logger.getLogger(
-                            TCPClientManager.class.getName()).log(Level.INFO, new String(new byte[]{stream}));
+//                        Logger.getLogger(
+//                            TCPClientManager.class.getName()).log(Level.INFO, new String(new byte[]{stream}));
                         chunk[index] = stream;
                         if (index == 1499 || remainingBytes == 0) {
                             if (index == 5) {
@@ -160,9 +161,16 @@ public class TCPClientManager extends Thread {
                                 chunk[1] = offset[1];
                                 chunk[2] = offset[2];
                                 chunk[3] = offset[3];
+                                
+                                Logger.getLogger(
+                                    TCPClientManager.class.getName()).log(Level.INFO,
+                                        "CHUNK ReceivedFromClient {0} {1}",
+                                        new Object[]{chunk, new String(chunk)}
+                                );
 //                                
                                 this.caller.chunkReceivedFromClient(clientSocket, chunk);
                                 position++;
+                                Arrays.fill(chunk, (byte) 0);
 //                                if (remainingBytes == 0) sendMessage(new byte[] {0, 1});
                             }
                             index = 4;
@@ -224,7 +232,7 @@ public class TCPClientManager extends Thread {
                     }
                 }
                 
-                while (dataCounter % 1500 != 0) {
+                while (dataCounter % 1496 != 0) {
                     this.writer.write(0);
                     dataCounter++;
                     flushCounter++;
