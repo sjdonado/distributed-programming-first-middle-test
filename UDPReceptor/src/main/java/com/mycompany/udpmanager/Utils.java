@@ -5,6 +5,7 @@
  */
 package com.mycompany.udpmanager;
 
+import com.mycompany.udpreceptor.UDPReceptor;
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
 import java.io.File;
@@ -19,6 +20,7 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 
 
@@ -108,6 +110,16 @@ public class Utils {
             }
         }
         return null;
+    }
+    
+    public static Chunk createChunk(byte[] data, int position) throws IOException {
+        File tempChunkFile = File.createTempFile("chunk", null);
+        FileUtils.writeByteArrayToFile(tempChunkFile, data);
+        tempChunkFile.deleteOnExit();
+
+        Logger.getLogger(UDPReceptor.class.getName()).log(Level.INFO,
+                "CHUNK temp file => {0}", tempChunkFile.getAbsolutePath());
+        return new Chunk(position, tempChunkFile.getAbsolutePath());
     }
     
     public static File createFileByClientSocketId(String filePath,

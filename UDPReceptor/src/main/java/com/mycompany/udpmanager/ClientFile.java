@@ -14,16 +14,16 @@ import java.util.ArrayList;
 public class ClientFile {
     private final int receptorId;
     private final int clientSocketId;
-    private final String filePath;
-    private final long fileSize;
+    private final String path;
+    private final long size;
     private final ArrayList<Chunk> chunks;
 
     public ClientFile(int receptorId, int clientSocketId, String filePath,
             long fileSize) {
         this.receptorId = receptorId;
         this.clientSocketId = clientSocketId;
-        this.filePath = filePath;
-        this.fileSize = fileSize;
+        this.path = filePath;
+        this.size = fileSize;
         this.chunks = new ArrayList<>();
     }
 
@@ -35,12 +35,12 @@ public class ClientFile {
         return clientSocketId;
     }
 
-    public String getFilePath() {
-        return filePath;
+    public String getPath() {
+        return path;
     }
 
-    public long getFileSize() {
-        return fileSize;
+    public long getSize() {
+        return size;
     }
     
     public ArrayList<Chunk> getChunks() {

@@ -85,18 +85,28 @@ public class UDPReceptor implements UDPManagerCallerInterface {
                         Utils.getFileSize(data))
                 );
             } else {
-                File tempChunkFile = File.createTempFile("chunk", null);
-                FileUtils.writeByteArrayToFile(tempChunkFile, headlessChunk);
-                tempChunkFile.deleteOnExit();
-                clientFile.addChunk(new Chunk(position, 
-                        tempChunkFile.getAbsolutePath()));
-                Logger.getLogger(UDPReceptor.class.getName()).log(Level.INFO,
-                        "CHUNK temp file => {0}", tempChunkFile.getAbsolutePath());
+                
                 if (finalChunk) {
+                    byte [] finalHeadlessChunk = headlessChunk;
+                    if (clientFile.getSize() / 1496 > 0 &&
+                            clientFile.getSize() % 1496 > 0) {
+                        finalHeadlessChunk = Arrays.copyOfRange(
+                            headlessChunk,
+                            0,
+                            (int) clientFile.getSize() % 1496
+                        );
+                    }
+                    
+                    clientFile.addChunk(Utils.createChunk(
+                        finalHeadlessChunk,
+                        position
+                    ));
+
                     File finalFile = Utils.createFileByClientSocketId(
-                        clientFile.getFilePath(),
+                        clientFile.getPath(),
                         clientFile.getChunks()
                     );
+
                     if (finalFile != null) {
     //                    receptors.get(receptorId).sendMessage(
     //                            Integer.toBinaryString(clientSocketId).getBytes());
@@ -104,6 +114,8 @@ public class UDPReceptor implements UDPManagerCallerInterface {
                             "FINAL file created => {0}", finalFile.getAbsolutePath());
                     }
                     clientFiles.remove(clientFile);
+                } else {
+                    clientFile.addChunk(Utils.createChunk(headlessChunk, position));
                 }
             }
         } catch (IOException ex) {
