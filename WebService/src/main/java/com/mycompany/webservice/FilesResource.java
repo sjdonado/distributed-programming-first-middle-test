@@ -11,6 +11,7 @@ import com.server.files.ServerFiles;
 import java.io.File;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.io.UnsupportedEncodingException;
 import java.net.HttpURLConnection;
 import java.net.InetAddress;
 import java.net.URL;
@@ -75,7 +76,7 @@ public class FilesResource {
                 URLDecoder.decode(filename, StandardCharsets.UTF_8.toString())
             );
             return Response.ok(file).build();
-        } catch (Exception e) {
+        } catch (UnsupportedEncodingException e) {
             System.err.println(e);
         }
         return Response.status(404).build();

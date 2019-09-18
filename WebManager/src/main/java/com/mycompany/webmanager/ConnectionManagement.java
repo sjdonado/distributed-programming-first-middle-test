@@ -13,7 +13,8 @@ import java.util.ArrayList;
  */
 public class ConnectionManagement {
     public static ConnectionManagement instance;
-    public final ArrayList<String> servers;
+    private final ArrayList<String> servers;
+
     private Integer pos;    
 
     private ConnectionManagement() {
@@ -45,6 +46,10 @@ public class ConnectionManagement {
             server = serverList.get(pos);   
             pos ++;   
         }
-        return server;   
+        return server;
+    }
+    
+    public ArrayList<String> getServers() {
+        return servers;
     }
 }

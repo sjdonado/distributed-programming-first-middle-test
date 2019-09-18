@@ -43,12 +43,13 @@ public class InitializerSetting {
                 "Content-type", MediaType.TEXT_PLAIN
             );
             urlConnection.setRequestProperty(
-                "Accept",
-                MediaType.TEXT_PLAIN
+                "Accept", MediaType.TEXT_PLAIN
             );
             OutputStream os = urlConnection.getOutputStream();
             byte[] input = address.getBytes("utf-8");
             os.write(input, 0, input.length);
+            System.out.println(
+                "Connection with Web Manager: " + urlConnection.getResponseCode());
         }catch (IOException ex) {
             System.err.println(ex);
         }

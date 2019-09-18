@@ -43,7 +43,7 @@ public class ConnectionResource {
     @Produces(MediaType.APPLICATION_JSON)
     public Response index() {
         Gson gson = new Gson();
-        return Response.ok(gson.toJson(this.cm.servers)).build();
+        return Response.ok(gson.toJson(this.cm.getServers())).build();
     }
 
     /**
