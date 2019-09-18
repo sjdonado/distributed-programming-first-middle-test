@@ -280,7 +280,7 @@ public class GUI extends javax.swing.JFrame implements TCPServiceManagerCallerIn
             }
         });
 
-        btnDownloadFolder.setText("Download folder");
+        btnDownloadFolder.setText("Select download folder");
         btnDownloadFolder.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 btnDownloadFolderActionPerformed(evt);

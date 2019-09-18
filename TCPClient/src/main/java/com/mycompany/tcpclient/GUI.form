@@ -402,7 +402,7 @@
             </Component>
             <Component class="javax.swing.JButton" name="btnDownloadFolder">
               <Properties>
-                <Property name="text" type="java.lang.String" value="Download folder"/>
+                <Property name="text" type="java.lang.String" value="Select download folder"/>
               </Properties>
               <Events>
                 <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="btnDownloadFolderActionPerformed"/>
