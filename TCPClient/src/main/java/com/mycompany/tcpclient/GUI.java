@@ -46,12 +46,12 @@ public class GUI extends javax.swing.JFrame implements TCPServiceManagerCallerIn
         this.fileTableModel = (DefaultTableModel) this.jTableFiles.getModel();
         this.jTableFiles.getSelectionModel()
             .addListSelectionListener(new FileSelectionHandler(this));
-        this.fileChooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
+        this.folderChooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
         File defaultDownlodDir = new File(this.downloadDir);
         if (!defaultDownlodDir.exists()) {
             defaultDownlodDir.mkdir();
         }
-        this.fileChooser.setCurrentDirectory(defaultDownlodDir);
+        this.folderChooser.setCurrentDirectory(defaultDownlodDir);
    }
     
     public void selectFile(int index) {
@@ -438,9 +438,9 @@ public class GUI extends javax.swing.JFrame implements TCPServiceManagerCallerIn
     }//GEN-LAST:event_btnDownloadFileActionPerformed
 
     private void btnDownloadFolderActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnDownloadFolderActionPerformed
-        int returnVal = this.fileChooser.showOpenDialog(this);
+        int returnVal = this.folderChooser.showOpenDialog(this);
         if (returnVal == JFileChooser.APPROVE_OPTION) {
-            File file = this.fileChooser.getSelectedFile();
+            File file = this.folderChooser.getSelectedFile();
             this.downloadDir = file.getAbsoluteFile().getPath();
             this.folderChooser.setCurrentDirectory(file);
         } else {
