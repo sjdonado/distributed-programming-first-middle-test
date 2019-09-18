@@ -35,6 +35,8 @@ public class GUI extends javax.swing.JFrame implements TCPServiceManagerCallerIn
     private final DefaultTableModel fileTableModel;
     private final SimpleDateFormat FILE_DATE_FORMAT = 
         new SimpleDateFormat("dd/mm/yyyy h:mm a"); 
+    private String downloadDir = System.getProperty("user.home")
+        + File.separator + "distributed_midterm_downloads";
     /**
      * Creates new form GUI
      */
@@ -44,6 +46,12 @@ public class GUI extends javax.swing.JFrame implements TCPServiceManagerCallerIn
         this.fileTableModel = (DefaultTableModel) this.jTableFiles.getModel();
         this.jTableFiles.getSelectionModel()
             .addListSelectionListener(new FileSelectionHandler(this));
+        this.fileChooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
+        File defaultDownlodDir = new File(this.downloadDir);
+        if (!defaultDownlodDir.exists()) {
+            defaultDownlodDir.mkdir();
+        }
+        this.fileChooser.setCurrentDirectory(defaultDownlodDir);
    }
     
     public void selectFile(int index) {
@@ -65,6 +73,7 @@ public class GUI extends javax.swing.JFrame implements TCPServiceManagerCallerIn
         fileCombo = new javax.swing.JComboBox<>();
         selectDownFile = new javax.swing.JButton();
         jLabel3 = new javax.swing.JLabel();
+        folderChooser = new javax.swing.JFileChooser();
         jTabbedPane1 = new javax.swing.JTabbedPane();
         jPanel1 = new javax.swing.JPanel();
         jLabel1 = new javax.swing.JLabel();
@@ -85,6 +94,7 @@ public class GUI extends javax.swing.JFrame implements TCPServiceManagerCallerIn
         txtDownloadServerPort = new javax.swing.JTextField();
         btnWebManagerConnection = new javax.swing.JButton();
         btnWebManagerSync = new javax.swing.JButton();
+        btnDownloadFolder = new javax.swing.JButton();
 
         jFrame1.setMinimumSize(new java.awt.Dimension(305, 294));
 
@@ -270,31 +280,39 @@ public class GUI extends javax.swing.JFrame implements TCPServiceManagerCallerIn
             }
         });
 
+        btnDownloadFolder.setText("Download folder");
+        btnDownloadFolder.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btnDownloadFolderActionPerformed(evt);
+            }
+        });
+
         javax.swing.GroupLayout jPanel2Layout = new javax.swing.GroupLayout(jPanel2);
         jPanel2.setLayout(jPanel2Layout);
         jPanel2Layout.setHorizontalGroup(
             jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(jPanel2Layout.createSequentialGroup()
                 .addGap(6, 6, 6)
-                .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING, false)
                     .addGroup(jPanel2Layout.createSequentialGroup()
-                        .addComponent(jLabel4)
-                        .addGap(6, 6, 6)
-                        .addComponent(txtDownloadServerIp, javax.swing.GroupLayout.PREFERRED_SIZE, 100, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addGap(6, 6, 6)
-                        .addComponent(jLabel5)
-                        .addGap(6, 6, 6)
-                        .addComponent(txtDownloadServerPort, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addGap(6, 6, 6)
-                        .addComponent(btnWebManagerConnection)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(btnWebManagerSync))
-                    .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 430, javax.swing.GroupLayout.PREFERRED_SIZE))
-                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
-            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel2Layout.createSequentialGroup()
-                .addContainerGap()
-                .addComponent(btnDownloadFile)
-                .addContainerGap())
+                        .addComponent(btnDownloadFolder)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                        .addComponent(btnDownloadFile))
+                    .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                        .addGroup(jPanel2Layout.createSequentialGroup()
+                            .addComponent(jLabel4)
+                            .addGap(6, 6, 6)
+                            .addComponent(txtDownloadServerIp, javax.swing.GroupLayout.PREFERRED_SIZE, 100, javax.swing.GroupLayout.PREFERRED_SIZE)
+                            .addGap(6, 6, 6)
+                            .addComponent(jLabel5)
+                            .addGap(6, 6, 6)
+                            .addComponent(txtDownloadServerPort, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                            .addGap(6, 6, 6)
+                            .addComponent(btnWebManagerConnection)
+                            .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                            .addComponent(btnWebManagerSync))
+                        .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 430, javax.swing.GroupLayout.PREFERRED_SIZE)))
+                .addContainerGap(12, Short.MAX_VALUE))
         );
         jPanel2Layout.setVerticalGroup(
             jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -314,7 +332,9 @@ public class GUI extends javax.swing.JFrame implements TCPServiceManagerCallerIn
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 93, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                .addComponent(btnDownloadFile)
+                .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(btnDownloadFile)
+                    .addComponent(btnDownloadFolder))
                 .addContainerGap())
         );
 
@@ -388,7 +408,8 @@ public class GUI extends javax.swing.JFrame implements TCPServiceManagerCallerIn
     }
     
     private void downloadFile() {
-        if (this.webManagerClient.downloadFile(this.selectedFile.getName())) {
+        if (this.webManagerClient
+                .downloadFile(this.selectedFile.getName(), this.downloadDir)) {
             JOptionPane.showMessageDialog(
                 jFrame1,
                 "File downloaded successfully!"
@@ -416,7 +437,17 @@ public class GUI extends javax.swing.JFrame implements TCPServiceManagerCallerIn
         this.downloadFile();
     }//GEN-LAST:event_btnDownloadFileActionPerformed
 
-    
+    private void btnDownloadFolderActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnDownloadFolderActionPerformed
+        int returnVal = this.fileChooser.showOpenDialog(this);
+        if (returnVal == JFileChooser.APPROVE_OPTION) {
+            File file = this.fileChooser.getSelectedFile();
+            this.downloadDir = file.getAbsoluteFile().getPath();
+            this.folderChooser.setCurrentDirectory(file);
+        } else {
+            System.out.println("File access cancelled by user.");
+        }
+    }//GEN-LAST:event_btnDownloadFolderActionPerformed
+
     /**
      * @param args the command line arguments
      */
@@ -474,12 +505,14 @@ public class GUI extends javax.swing.JFrame implements TCPServiceManagerCallerIn
     
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton btnDownloadFile;
+    private javax.swing.JButton btnDownloadFolder;
     private javax.swing.JButton btnWebManagerConnection;
     private javax.swing.JButton btnWebManagerSync;
     private javax.swing.JButton buttonConnectToServer;
     private javax.swing.JButton buttonSelectFile;
     private javax.swing.JFileChooser fileChooser;
     private javax.swing.JComboBox<String> fileCombo;
+    private javax.swing.JFileChooser folderChooser;
     private javax.swing.JFrame jFrame1;
     private javax.swing.JLabel jLabel1;
     private javax.swing.JLabel jLabel2;

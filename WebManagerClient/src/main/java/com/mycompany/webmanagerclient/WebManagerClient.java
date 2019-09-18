@@ -21,22 +21,21 @@ import org.apache.commons.io.FileUtils;
  * @author brian
  */
 public class WebManagerClient {
-    static final String DOWNLOAD_DIR = System.getProperty("user.home") 
-        + File.separator + "distributed_midterm_downloads";
     private final String BASE_URL;
+    
     public WebManagerClient(String ip, int port) {
         this.BASE_URL = "http://" + ip + ":" + port 
             + "/WebService/webresources/files";
     }
     
-    public boolean downloadFile(String filename) {
+    public boolean downloadFile(String filename, String folderPath) {
         try{
             URL url = new URL(
                 this.BASE_URL 
                 + "/" 
                 + URLEncoder.encode(filename, StandardCharsets.UTF_8.toString())
             );
-            File file = new File(DOWNLOAD_DIR + File.separator + filename);
+            File file = new File(folderPath + File.separator + filename);
             FileUtils.copyURLToFile(url, file);
             return true;
         }catch (IOException ex) {
