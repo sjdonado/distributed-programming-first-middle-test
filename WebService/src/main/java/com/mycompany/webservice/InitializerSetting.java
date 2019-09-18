@@ -82,7 +82,8 @@ public class InitializerSetting {
             byte[] input = address.getBytes("utf-8");
             os.write(input, 0, input.length);
             System.out.println(
-                "Connection with Web Manager: " + urlConnection.getResponseCode());
+                "Connection with Web Manager: " + urlConnection.getResponseCode()
+            );
         }catch (IOException ex) {
             System.err.println(ex);
         }
