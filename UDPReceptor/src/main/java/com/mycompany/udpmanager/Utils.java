@@ -10,7 +10,6 @@ import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -72,10 +71,10 @@ public class Utils {
         //System.out.println((remainingBytes == 0 ? 1 : 0) + id + bit25th);
         offset[3] = (byte) Integer.parseInt((remainingBytes == 0 ? 1 : 0) + id + bit25th);
         //System.out.println((unsignedToBytes(offset[3]) + 0x100).substring(1));
-        Logger.getLogger(Utils.class.getName()).log(
-            Level.INFO,
-            Integer.toBinaryString((offset[3] & 0xFF) + 0x100).substring(1)
-        );
+//        Logger.getLogger(Utils.class.getName()).log(
+//            Level.INFO,
+//            Integer.toBinaryString((offset[3] & 0xFF) + 0x100).substring(1)
+//        );
         return offset;
     }
     
@@ -132,52 +131,29 @@ public class Utils {
     
     public static File createFileByClientSocketId(String filePath,
             ArrayList<Chunk> fileChunks) {
-        File newFile = new File(filePath);
+        File destFile = new File(filePath);
         
         Comparator<Chunk> comparator = (Chunk c1, Chunk c2) ->
                 (c1.getPosition() + "").compareTo((c2.getPosition() + ""));
         
         Collections.sort(fileChunks, comparator);
         
-        File[] files = new File[fileChunks.size()];
-        for (int index = 0; index < fileChunks.size(); index++) {
-            files[index] = new File(fileChunks.get(index).getFilePath());
-        }
         try {
-            joinFiles(files, newFile);
-            return newFile;
+            InputStream input;
+            OutputStream output;
+            File tempFile;
+            output = new BufferedOutputStream(new FileOutputStream(destFile, true));
+            for (int index = 0; index < fileChunks.size(); index++) {
+                tempFile = new File(fileChunks.get(index).getFilePath());
+                input = new BufferedInputStream(new FileInputStream(tempFile));
+                IOUtils.copy(input, output);
+                input.close();
+            }
+            output.close();
+            return destFile;
         } catch (IOException ex) {
             Logger.getLogger(Utils.class.getName()).log(Level.SEVERE, null, ex);
             return null;
-        }
-    }
-    
-    public static void joinFiles(File[] sources, File destination)
-            throws IOException {
-        OutputStream output = null;
-        try {
-            output = createAppendableStream(destination);
-            for (File source : sources) {
-                appendFile(output, source);
-            }
-        } finally {
-            IOUtils.closeQuietly(output);
-        }
-    }
-
-    private static BufferedOutputStream createAppendableStream(File destination)
-            throws FileNotFoundException {
-        return new BufferedOutputStream(new FileOutputStream(destination, true));
-    }
-
-    private static void appendFile(OutputStream output, File source)
-            throws IOException {
-        InputStream input = null;
-        try {
-            input = new BufferedInputStream(new FileInputStream(source));
-            IOUtils.copy(input, output);
-        } finally {
-            IOUtils.closeQuietly(input);
         }
     }
 }

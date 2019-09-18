@@ -5,7 +5,6 @@
  */
 package com.mycompany.udpreceptor;
 
-import com.mycompany.udpmanager.Chunk;
 import com.mycompany.udpmanager.ClientFile;
 import com.mycompany.udpmanager.UDPManager;
 import com.mycompany.udpmanager.UDPManagerCallerInterface;
@@ -58,25 +57,21 @@ public class UDPReceptor implements UDPManagerCallerInterface {
 
             byte[] headlessChunk = Arrays.copyOfRange(data, 4, data.length);
             
-            Logger.getLogger(UDPReceptor.class.getName()).log(
-                Level.INFO,
-                "CHUNK - ReceptorId: {0} - |{1}|{2}|{3}|{4}| - {5}:{6} \n"
-                        + "DATA: {7} \n"
-                        + "PARSED_DATA: {8} \n"
-                        + "HEADLESS_DATA: {9}",
-                new Object[] {
-                    receptorId,
-                    String.format("HEAD[0] => %8s", Integer.toBinaryString(data[0] & 0xFF)).replace(' ', '0'),
-                    String.format("HEAD[1] => %8s", Integer.toBinaryString(data[1] & 0xFF)).replace(' ', '0'),
-                    String.format("HEAD[2] => %8s", Integer.toBinaryString(data[2] & 0xFF)).replace(' ', '0'),
-                    String.format("HEAD[3] => %8s", Integer.toBinaryString(data[3] & 0xFF)).replace(' ', '0'),
-                    ipAdress,
-                    sourcePort,
-                    data,
-                    new String(data),
-                    new String(headlessChunk),
-                }
-            );
+//            Logger.getLogger(UDPReceptor.class.getName()).log(
+//                Level.INFO,
+//                "CHUNK - ReceptorId: {0} - |{1}|{2}|{3}|{4}| - {5}:{6} \n"
+//                        + "DATA: {7} \n",
+//                new Object[] {
+//                    receptorId,
+//                    String.format("HEAD[0] => %8s", Integer.toBinaryString(data[0] & 0xFF)).replace(' ', '0'),
+//                    String.format("HEAD[1] => %8s", Integer.toBinaryString(data[1] & 0xFF)).replace(' ', '0'),
+//                    String.format("HEAD[2] => %8s", Integer.toBinaryString(data[2] & 0xFF)).replace(' ', '0'),
+//                    String.format("HEAD[3] => %8s", Integer.toBinaryString(data[3] & 0xFF)).replace(' ', '0'),
+//                    ipAdress,
+//                    sourcePort,
+//                    new String(headlessChunk),
+//                }
+//            );
             
             if ((clientFile = Utils.getClientFile(clientSocketId, clientFiles)) == null) {
                 clientFiles.add(new ClientFile(receptorId, clientSocketId,
@@ -84,7 +79,6 @@ public class UDPReceptor implements UDPManagerCallerInterface {
                         Utils.getFileSize(headlessChunk))
                 );
             } else {
-                
                 if (finalChunk) {
                     byte [] finalHeadlessChunk = headlessChunk;
                     if (clientFile.getSize() % 1496 > 0) {

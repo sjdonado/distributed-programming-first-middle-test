@@ -241,6 +241,9 @@ public class TCPClientManager extends Thread {
                 IOUtils.copy(fileInputStream, this.writer);
                 
                 this.writer.flush();
+                
+                filenameStream.close();
+                fileInputStream.close();
             }
         } catch (IOException ex) {
             this.caller.errorHasBeenThrown(ex);
