@@ -57,7 +57,7 @@ public class UDPReceptor implements UDPManagerCallerInterface {
             int position = Utils.getPositionFromHeader(data);
             boolean finalChunk = Utils.getFinalBitFromHeader(data);
 
-            byte[] headlessChunk = Arrays.copyOfRange(data, 5, data.length - 1);
+            byte[] headlessChunk = Arrays.copyOfRange(data, 4, data.length);
             
             Logger.getLogger(UDPReceptor.class.getName()).log(
                 Level.INFO,
@@ -82,14 +82,13 @@ public class UDPReceptor implements UDPManagerCallerInterface {
             if ((clientFile = Utils.getClientFile(clientSocketId, clientFiles)) == null) {
                 clientFiles.add(new ClientFile(receptorId, clientSocketId,
                         Utils.getFilePath(headlessChunk),
-                        Utils.getFileSize(data))
+                        Utils.getFileSize(headlessChunk))
                 );
             } else {
                 
                 if (finalChunk) {
                     byte [] finalHeadlessChunk = headlessChunk;
-                    if (clientFile.getSize() / 1496 > 0 &&
-                            clientFile.getSize() % 1496 > 0) {
+                    if (clientFile.getSize() % 1496 > 0) {
                         finalHeadlessChunk = Arrays.copyOfRange(
                             headlessChunk,
                             0,
