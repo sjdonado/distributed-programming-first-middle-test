@@ -11,6 +11,7 @@ import java.io.BufferedOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -19,6 +20,7 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.stream.Collectors;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 
@@ -40,9 +42,12 @@ public class Utils {
     }
     
     public static int getPositionFromHeader(byte[] data) {
-        int byte1 = unsignedToBytes(data[0]);
-        int byte2 = unsignedToBytes(data[1]) * 2^(8);
-        int byte3 = unsignedToBytes(data[2]) * 2^(16);
+        int byte1 = (byte)(data[0] >> 24);
+        int byte2 = (byte)(data[1] >> 16);
+        int byte3 = (byte)(data[2] >>  8);
+//        int byte1 = unsignedToBytes(data[0]);
+//        int byte2 = unsignedToBytes(data[1]) * 2^(8);
+//        int byte3 = unsignedToBytes(data[2]) * 2^(16);
         String byte4 = Integer.toBinaryString((data[3] & 0xFF) + 0x100).substring(1);
         int pos = Integer.parseInt(byte4.substring(7)) * 2^(24);
         int position = byte1 + byte2 + byte3 + pos;
@@ -59,9 +64,12 @@ public class Utils {
     public static byte[] createHeader(int position, int remainingBytes, int socketID) {
         byte[] offset = new byte[4];
         
-        offset[0] = (byte) (position % 255);
-        offset[1] = (byte) (position / 255);
-        offset[2] = (byte) (position / 65535);
+        offset[0] = (byte) (position >> 24);
+        offset[1] = (byte) (position >> 16);
+        offset[2] = (byte) (position >> 8);
+//        offset[0] = (byte) (position % 255);
+//        offset[1] = (byte) (position / 255);
+//        offset[2] = (byte) (position / 65535);
         int bit25th = position / 16777215;
         
         String id = Integer.toBinaryString(socketID);
@@ -84,10 +92,6 @@ public class Utils {
                 + File.separator + "domains" + File.separator + "domain1"
                 + File.separator + "uploads" + File.separator;
         String parsedData = new String(data);
-        // Logger.getLogger(Utils.class.getName()).log(
-        //     Level.INFO,
-        //     "GETFILEPATHDATA => {0}", parsedData
-        // );
         String filename = parsedData.substring(0, parsedData.indexOf("/*/"));
         Logger.getLogger(Utils.class.getName()).log(
             Level.INFO,
@@ -128,40 +132,38 @@ public class Utils {
         FileUtils.writeByteArrayToFile(tempChunkFile, data);
         tempChunkFile.deleteOnExit();
 
-        Logger.getLogger(UDPReceptor.class.getName()).log(Level.INFO,
-                "CHUNK temp file => {0}", tempChunkFile.getAbsolutePath());
+//        Logger.getLogger(UDPReceptor.class.getName()).log(Level.INFO,
+//                "CHUNK temp file => {0}", tempChunkFile.getAbsolutePath());
         return new Chunk(position, tempChunkFile.getAbsolutePath());
     }
     
-    public static File createFileByClientSocketId(String filePath,
+    public static boolean createFileByClientSocketId(String filePath,
             ArrayList<Chunk> fileChunks) {
-        File destFile = new File(filePath);
-        
-        if (destFile.exists()) {
-            destFile.delete();
-        }
         
         Comparator<Chunk> comparator = (Chunk c1, Chunk c2) ->
-                (c1.getPosition() + "").compareTo((c2.getPosition() + ""));
+                (new Integer(c1.getPosition())).compareTo(new Integer(c2.getPosition()));
         
         Collections.sort(fileChunks, comparator);
-        
+        System.out.println("fileChunks => " + fileChunks
+                        .stream()
+                        .map(v -> v.getPosition())
+                        .collect(Collectors.toList()));
         try {
-            InputStream input;
-            OutputStream output;
-            File tempFile;
-            output = new BufferedOutputStream(new FileOutputStream(destFile, true));
+            FileInputStream input;
+            FileOutputStream output;
+            output = new FileOutputStream(filePath, false);
             for (int index = 0; index < fileChunks.size(); index++) {
-                tempFile = new File(fileChunks.get(index).getFilePath());
-                input = new BufferedInputStream(new FileInputStream(tempFile));
+                input = new FileInputStream(fileChunks.get(index).getFilePath());
                 IOUtils.copy(input, output);
-                input.close();
+                IOUtils.closeQuietly(input);
             }
-            output.close();
-            return destFile;
+            IOUtils.closeQuietly(output);
+            Logger.getLogger(UDPReceptor.class.getName()).log(Level.INFO,
+                "FINAL file created => {0}", filePath);
+            return true;
         } catch (IOException ex) {
             Logger.getLogger(Utils.class.getName()).log(Level.SEVERE, null, ex);
-            return null;
+            return false;
         }
     }
 }

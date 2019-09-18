@@ -163,13 +163,11 @@ public class TCPClientManager extends Thread {
                                 chunk[1] = offset[1];
                                 chunk[2] = offset[2];
                                 chunk[3] = offset[3];
-                                
 //                                Logger.getLogger(
 //                                    TCPClientManager.class.getName()).log(Level.INFO,
 //                                        "CHUNK ReceivedFromClient {0} {1}",
 //                                        new Object[]{chunk, new String(chunk)}
 //                                );
-//                                
                                 this.caller.chunkReceivedFromClient(clientSocket, chunk);
                                 position++;
                                 Arrays.fill(chunk, (byte) 0);

@@ -56,10 +56,15 @@ public class UDPManager extends Thread {
                     String parsedData = new String(datagramPacket.getData())
                             .replace("\0", "");
                     if (parsedData.length() <= 6
-                            && parsedData.contains("|")
-                            && StringUtils.isNumeric(parsedData.substring(0, parsedData.indexOf("|")))) {
-                        int socketClientId = Integer.parseInt(parsedData.substring(0, parsedData.indexOf("|")));
-                        int progress = Integer.parseInt(parsedData.substring(parsedData.indexOf("|") + 1));
+                        && parsedData.contains("|")
+                        && StringUtils.isNumeric(parsedData.substring(0, parsedData.indexOf("|")))
+                    ) {
+                        int socketClientId = Integer.parseInt(
+                            parsedData.substring(0, parsedData.indexOf("|"))
+                        );
+                        int progress = Integer.parseInt(
+                            parsedData.substring(parsedData.indexOf("|") + 1)
+                        );
                         this.caller.clientUploadFileStatus(socketClientId, progress);
                     } else {
                         this.caller.dataReceived(

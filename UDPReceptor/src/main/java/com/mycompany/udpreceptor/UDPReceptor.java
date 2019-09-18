@@ -15,7 +15,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import org.apache.commons.lang3.StringUtils;
 
 /**
  *
@@ -57,13 +56,6 @@ public class UDPReceptor implements UDPManagerCallerInterface {
             boolean finalChunk = Utils.getFinalBitFromHeader(data);
 
             byte[] headlessChunk = Arrays.copyOfRange(data, 4, data.length);
-            String parsedHeadlessChunk = new String(headlessChunk).replace("\0", "");
-            if ((parsedHeadlessChunk.length() <= 6
-                    && parsedHeadlessChunk.contains("|")
-                    && StringUtils.isNumeric(parsedHeadlessChunk.substring(0, parsedHeadlessChunk.indexOf("|"))))
-                    || StringUtils.isNumeric(parsedHeadlessChunk)) {
-                return;
-            }
 //            Logger.getLogger(UDPReceptor.class.getName()).log(
 //                Level.INFO,
 //                "CHUNK - ReceptorId: {0} - |{1}|{2}|{3}|{4}| - {5}:{6} \n"
@@ -101,15 +93,11 @@ public class UDPReceptor implements UDPManagerCallerInterface {
                         position
                     ));
 
-                    File finalFile = Utils.createFileByClientSocketId(
+                    if (Utils.createFileByClientSocketId(
                         clientFile.getPath(),
                         clientFile.getChunks()
-                    );
-
-                    if (finalFile != null) {
+                    )) {
                         receptors.get(receptorId).sendMessage((clientSocketId + "|" + 100).getBytes());
-                        Logger.getLogger(UDPReceptor.class.getName()).log(Level.INFO,
-                            "FINAL file created => {0}", finalFile.getAbsolutePath());
                     }
                     clientFiles.remove(clientFile);
                 } else {
