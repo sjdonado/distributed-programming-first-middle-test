@@ -173,7 +173,7 @@ public class TCPClientManager extends Thread {
                                 Arrays.fill(chunk, (byte) 0);
 //                                if (remainingBytes == 0) sendMessage(new byte[] {0, 1});
                             }
-                            index = 4;
+                            index = 3;
                         }
                         index += 1;
                     }

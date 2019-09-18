@@ -80,20 +80,21 @@ public class Utils {
     }
     
     public static String getFilePath(byte[] data) {
-        String parsedData = new String(data);
+        String userPath = System.getProperty("user.home");
+        String parsedData = new String(data).replace("\0", "");
         String filename = parsedData.substring(0, parsedData.indexOf("/*/"));
         Logger.getLogger(Utils.class.getName()).log(
             Level.INFO,
             "FILENAME => {0}", filename
         );
-        return "files/" + filename;
+        return userPath+File.separator+"GlassFish_Server"+File.separator+"glassfish"+File.separator+"domains"+File.separator+"domain1"+File.separator+"uploads"+File.separator+filename;
     }
     
     public static long getFileSize(byte[] data) {
         String parsedData = new String(data).replace("\0", "");
         long size = Long.parseLong(parsedData.substring(
                 parsedData.indexOf("/*/") + 3,
-                parsedData.length() - 1)
+                parsedData.length())
         );
         Logger.getLogger(Utils.class.getName()).log(
             Level.INFO,
