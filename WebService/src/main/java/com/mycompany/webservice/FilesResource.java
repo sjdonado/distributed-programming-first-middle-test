@@ -9,6 +9,11 @@ import com.google.gson.Gson;
 import com.mycompany.webmanagerclient.SharedFile;
 import com.server.files.ServerFiles;
 import java.io.File;
+import java.io.IOException;
+import java.io.OutputStream;
+import java.net.HttpURLConnection;
+import java.net.InetAddress;
+import java.net.URL;
 import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
@@ -37,7 +42,7 @@ public class FilesResource {
      */
     public FilesResource() {
     }
-
+    
     /**
      * Retrieves representation of an instance of com.mycompany.webservice.FilesResource
      * @return an instance of java.lang.String
