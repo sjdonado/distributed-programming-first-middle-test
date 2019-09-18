@@ -138,6 +138,8 @@ public class TCPClientManager extends Thread {
 //                            TCPClientManager.class.getName()).log(Level.INFO, new String(new byte[]{stream}));
                         chunk[index] = stream;
                         if (index == 1499 || remainingBytes == 0) {
+//                            Logger.getLogger(TCPClientManager.class.getName())
+//                                    .log(Level.INFO, "INDEX: {0} CHUNK - 4:{1} 5:{2}", new Object[]{index, (chunk[4] &255), (chunk[5] &255)});
                             if (index == 5) {
                                 if ((chunk[4] &255) == 0 && (chunk[5] &255) == 0) {
                                     this.caller.messageReceivedFromClient(
@@ -145,10 +147,10 @@ public class TCPClientManager extends Thread {
                                         "Successful connection"
                                     );
                                 }
-                                if ((chunk[4] &255) == 0 && (chunk[5] &255) == 1) {
+                                if ((chunk[4] &255) == 0 && (chunk[5] &255) > 0) {
                                     this.caller.messageReceivedFromClient(
                                         clientSocket,
-                                        "File saved successfully"
+                                        (chunk[5] &255) + "%"
                                     );
                                 }
                             } else {
@@ -162,23 +164,21 @@ public class TCPClientManager extends Thread {
                                 chunk[2] = offset[2];
                                 chunk[3] = offset[3];
                                 
-                                Logger.getLogger(
-                                    TCPClientManager.class.getName()).log(Level.INFO,
-                                        "CHUNK ReceivedFromClient {0} {1}",
-                                        new Object[]{chunk, new String(chunk)}
-                                );
+//                                Logger.getLogger(
+//                                    TCPClientManager.class.getName()).log(Level.INFO,
+//                                        "CHUNK ReceivedFromClient {0} {1}",
+//                                        new Object[]{chunk, new String(chunk)}
+//                                );
 //                                
                                 this.caller.chunkReceivedFromClient(clientSocket, chunk);
                                 position++;
                                 Arrays.fill(chunk, (byte) 0);
-//                                if (remainingBytes == 0) sendMessage(new byte[] {0, 1});
                             }
                             index = 3;
                         }
                         index += 1;
                     }
                 }
-//                sendMessage(new byte[] {0, 1});
                 if (this.serviceConnection) {
                     clearLastSocket();
                 }
@@ -241,9 +241,6 @@ public class TCPClientManager extends Thread {
                 IOUtils.copy(fileInputStream, this.writer);
                 
                 this.writer.flush();
-                
-                filenameStream.close();
-                fileInputStream.close();
             }
         } catch (IOException ex) {
             this.caller.errorHasBeenThrown(ex);

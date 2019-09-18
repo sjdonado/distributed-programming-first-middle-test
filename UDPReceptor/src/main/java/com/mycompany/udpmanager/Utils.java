@@ -84,6 +84,10 @@ public class Utils {
                 + File.separator + "domains" + File.separator + "domain1"
                 + File.separator + "uploads" + File.separator;
         String parsedData = new String(data);
+        // Logger.getLogger(Utils.class.getName()).log(
+        //     Level.INFO,
+        //     "GETFILEPATHDATA => {0}", parsedData
+        // );
         String filename = parsedData.substring(0, parsedData.indexOf("/*/"));
         Logger.getLogger(Utils.class.getName()).log(
             Level.INFO,
@@ -132,6 +136,10 @@ public class Utils {
     public static File createFileByClientSocketId(String filePath,
             ArrayList<Chunk> fileChunks) {
         File destFile = new File(filePath);
+        
+        if (destFile.exists()) {
+            destFile.delete();
+        }
         
         Comparator<Chunk> comparator = (Chunk c1, Chunk c2) ->
                 (c1.getPosition() + "").compareTo((c2.getPosition() + ""));

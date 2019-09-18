@@ -9,6 +9,7 @@ import java.io.IOException;
 import java.net.DatagramPacket;
 import java.net.InetAddress;
 import java.net.MulticastSocket;
+import org.apache.commons.lang3.StringUtils;
 
 /**
  *
@@ -54,9 +55,12 @@ public class UDPManager extends Thread {
                     multicastSocket.receive(datagramPacket);
                     String parsedData = new String(datagramPacket.getData())
                             .replace("\0", "");
-                    if (parsedData.length() <= 6) {
-                        int socketClientId = Integer.parseInt(parsedData);
-                        this.caller.clientUploadFileFinished(socketClientId);
+                    if (parsedData.length() <= 6
+                            && parsedData.contains("|")
+                            && StringUtils.isNumeric(parsedData.substring(0, parsedData.indexOf("|")))) {
+                        int socketClientId = Integer.parseInt(parsedData.substring(0, parsedData.indexOf("|")));
+                        int progress = Integer.parseInt(parsedData.substring(parsedData.indexOf("|") + 1));
+                        this.caller.clientUploadFileStatus(socketClientId, progress);
                     } else {
                         this.caller.dataReceived(
                             this.receptorId,

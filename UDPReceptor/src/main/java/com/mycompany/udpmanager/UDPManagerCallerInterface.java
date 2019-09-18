@@ -12,5 +12,5 @@ package com.mycompany.udpmanager;
 public interface UDPManagerCallerInterface {
     public void dataReceived(int receptorId, String ipAdress, int sourcePort, byte[] data);
     public void exceptionHasBeenThrown(Exception ex);
-    public void clientUploadFileFinished(int clientManagerId);
+    public void clientUploadFileStatus(int clientManagerId, int progress);
 }

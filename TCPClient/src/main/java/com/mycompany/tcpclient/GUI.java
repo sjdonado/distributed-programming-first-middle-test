@@ -74,6 +74,7 @@ public class GUI extends javax.swing.JFrame implements TCPServiceManagerCallerIn
         textServerPort = new javax.swing.JTextField();
         buttonConnectToServer = new javax.swing.JButton();
         buttonSelectFile = new javax.swing.JButton();
+        labelFileProgress = new javax.swing.JLabel();
         jPanel2 = new javax.swing.JPanel();
         jScrollPane1 = new javax.swing.JScrollPane();
         jTableFiles = new javax.swing.JTable();
@@ -155,6 +156,8 @@ public class GUI extends javax.swing.JFrame implements TCPServiceManagerCallerIn
             }
         });
 
+        labelFileProgress.setText(" ");
+
         javax.swing.GroupLayout jPanel1Layout = new javax.swing.GroupLayout(jPanel1);
         jPanel1.setLayout(jPanel1Layout);
         jPanel1Layout.setHorizontalGroup(
@@ -162,18 +165,23 @@ public class GUI extends javax.swing.JFrame implements TCPServiceManagerCallerIn
             .addGroup(jPanel1Layout.createSequentialGroup()
                 .addContainerGap()
                 .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(buttonSelectFile)
+                    .addComponent(labelServerMessage, javax.swing.GroupLayout.PREFERRED_SIZE, 349, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addGroup(jPanel1Layout.createSequentialGroup()
-                        .addComponent(jLabel1)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(textServerIP, javax.swing.GroupLayout.PREFERRED_SIZE, 100, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING, false)
+                            .addGroup(javax.swing.GroupLayout.Alignment.LEADING, jPanel1Layout.createSequentialGroup()
+                                .addComponent(buttonSelectFile)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                .addComponent(labelFileProgress, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                            .addGroup(javax.swing.GroupLayout.Alignment.LEADING, jPanel1Layout.createSequentialGroup()
+                                .addComponent(jLabel1)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                .addComponent(textServerIP, javax.swing.GroupLayout.PREFERRED_SIZE, 100, javax.swing.GroupLayout.PREFERRED_SIZE)))
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(jLabel2)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(textServerPort, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(buttonConnectToServer))
-                    .addComponent(labelServerMessage, javax.swing.GroupLayout.PREFERRED_SIZE, 349, javax.swing.GroupLayout.PREFERRED_SIZE))
+                        .addComponent(buttonConnectToServer)))
                 .addContainerGap(93, Short.MAX_VALUE))
         );
         jPanel1Layout.setVerticalGroup(
@@ -187,7 +195,9 @@ public class GUI extends javax.swing.JFrame implements TCPServiceManagerCallerIn
                     .addComponent(textServerPort, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addComponent(buttonConnectToServer))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(buttonSelectFile)
+                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(buttonSelectFile)
+                    .addComponent(labelFileProgress))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(labelServerMessage, javax.swing.GroupLayout.PREFERRED_SIZE, 27, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addContainerGap(44, Short.MAX_VALUE))
@@ -340,6 +350,7 @@ public class GUI extends javax.swing.JFrame implements TCPServiceManagerCallerIn
     private void buttonSelectFileActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_buttonSelectFileActionPerformed
         int returnVal = this.fileChooser.showOpenDialog(this);
         if (returnVal == JFileChooser.APPROVE_OPTION) {
+            labelFileProgress.setText("Sending...");
             File file = fileChooser.getSelectedFile();
             if (this.tcpClientManager != null) {
                 this.tcpClientManager.sendFile(file);
@@ -480,6 +491,7 @@ public class GUI extends javax.swing.JFrame implements TCPServiceManagerCallerIn
     private javax.swing.JScrollPane jScrollPane1;
     private javax.swing.JTabbedPane jTabbedPane1;
     private javax.swing.JTable jTableFiles;
+    private javax.swing.JLabel labelFileProgress;
     private javax.swing.JLabel labelServerMessage;
     private javax.swing.JButton selectDownFile;
     private javax.swing.JTextField textServerIP;
@@ -491,14 +503,20 @@ public class GUI extends javax.swing.JFrame implements TCPServiceManagerCallerIn
    
     @Override
     public void messageReceivedFromClient(Socket clientSocket, String message) {
-        Logger.getLogger(
-                GUI.class.getName()).log(Level.INFO, message);
-        this.labelServerMessage.setText(message + "\n");
+//        Logger.getLogger(
+//                GUI.class.getName()).log(Level.INFO, message);
+        if (message.length() > 4) {
+            this.labelServerMessage.setText(message);
+        } else {
+            this.labelFileProgress.setText(message);
+        }
     }
     
     @Override
     public void chunkReceivedFromClient(Socket clientSocket, byte[] data) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+//        Logger.getLogger(
+//                GUI.class.getName()).log(Level.INFO, "chunkReceivedFromClient {0}", new String(data));
+//        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
 
     @Override

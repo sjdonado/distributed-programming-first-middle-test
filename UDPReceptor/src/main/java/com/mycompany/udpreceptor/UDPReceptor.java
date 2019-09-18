@@ -15,6 +15,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import org.apache.commons.lang3.StringUtils;
 
 /**
  *
@@ -56,7 +57,13 @@ public class UDPReceptor implements UDPManagerCallerInterface {
             boolean finalChunk = Utils.getFinalBitFromHeader(data);
 
             byte[] headlessChunk = Arrays.copyOfRange(data, 4, data.length);
-            
+            String parsedHeadlessChunk = new String(headlessChunk).replace("\0", "");
+            if ((parsedHeadlessChunk.length() <= 6
+                    && parsedHeadlessChunk.contains("|")
+                    && StringUtils.isNumeric(parsedHeadlessChunk.substring(0, parsedHeadlessChunk.indexOf("|"))))
+                    || StringUtils.isNumeric(parsedHeadlessChunk)) {
+                return;
+            }
 //            Logger.getLogger(UDPReceptor.class.getName()).log(
 //                Level.INFO,
 //                "CHUNK - ReceptorId: {0} - |{1}|{2}|{3}|{4}| - {5}:{6} \n"
@@ -72,13 +79,13 @@ public class UDPReceptor implements UDPManagerCallerInterface {
 //                    new String(headlessChunk),
 //                }
 //            );
-            
             if ((clientFile = Utils.getClientFile(clientSocketId, clientFiles)) == null) {
                 clientFiles.add(new ClientFile(receptorId, clientSocketId,
                         Utils.getFilePath(headlessChunk),
                         Utils.getFileSize(headlessChunk))
                 );
             } else {
+                int progress = (int) (((double) (clientFile.getChunks().size()) / (clientFile.getSize() / 1496)) * 100);
                 if (finalChunk) {
                     byte [] finalHeadlessChunk = headlessChunk;
                     if (clientFile.getSize() % 1496 > 0) {
@@ -88,7 +95,7 @@ public class UDPReceptor implements UDPManagerCallerInterface {
                             (int) clientFile.getSize() % 1496
                         );
                     }
-                    
+
                     clientFile.addChunk(Utils.createChunk(
                         finalHeadlessChunk,
                         position
@@ -100,14 +107,14 @@ public class UDPReceptor implements UDPManagerCallerInterface {
                     );
 
                     if (finalFile != null) {
-                        receptors.get(receptorId)
-                                .sendMessage((clientSocketId + "").getBytes());
+                        receptors.get(receptorId).sendMessage((clientSocketId + "|" + 100).getBytes());
                         Logger.getLogger(UDPReceptor.class.getName()).log(Level.INFO,
                             "FINAL file created => {0}", finalFile.getAbsolutePath());
                     }
                     clientFiles.remove(clientFile);
                 } else {
                     clientFile.addChunk(Utils.createChunk(headlessChunk, position));
+                    receptors.get(receptorId).sendMessage((clientSocketId + "|" + progress).getBytes());
                 }
             }
         } catch (IOException ex) {
@@ -122,7 +129,7 @@ public class UDPReceptor implements UDPManagerCallerInterface {
     }
 
     @Override
-    public void clientUploadFileFinished(int clientManagerId) {
+    public void clientUploadFileStatus(int clientManagerId, int progress) {
 //        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
 }

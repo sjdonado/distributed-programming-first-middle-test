@@ -7,9 +7,11 @@ package com.mycompany.tcpmanager;
 
 import com.mycompany.udpmanager.UDPManager;
 import com.mycompany.udpmanager.UDPManagerCallerInterface;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -122,7 +124,8 @@ public class TCPServiceManager extends Thread implements TCPServiceManagerCaller
     }
 
     @Override
-    public void clientUploadFileFinished(int clientManagerId) {
-        clients.get(clientManagerId).sendMessage(new byte[] {0, 1});
+    public void clientUploadFileStatus(int clientManagerId, int progress) {
+        if (progress == 0) progress = 1;
+        clients.get(clientManagerId).sendMessage(new byte[] {0, (byte) progress});
     }
 }
