@@ -16,7 +16,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import org.apache.commons.io.FileUtils;
 
 /**
  *
@@ -107,8 +106,8 @@ public class UDPReceptor implements UDPManagerCallerInterface {
                     );
 
                     if (finalFile != null) {
-    //                    receptors.get(receptorId).sendMessage(
-    //                            Integer.toBinaryString(clientSocketId).getBytes());
+                        receptors.get(receptorId)
+                                .sendMessage((clientSocketId + "").getBytes());
                         Logger.getLogger(UDPReceptor.class.getName()).log(Level.INFO,
                             "FINAL file created => {0}", finalFile.getAbsolutePath());
                     }
