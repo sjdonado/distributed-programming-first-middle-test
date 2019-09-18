@@ -5,11 +5,14 @@
  */
 package com.mycompany.webmanager;
 
+import com.google.gson.Gson;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.UriInfo;
 import javax.ws.rs.Consumes;
+import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
+import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
@@ -31,6 +34,17 @@ public class ConnectionResource {
     public ConnectionResource() {
         this.cm = ConnectionManagement.getInstance();
     }   
+    
+    /**
+     * Retrieves representation of an instance of com.mycompany.webmanager.SharedFilesResource
+     * @return an instance of java.lang.String
+     */
+    @GET
+    @Produces(MediaType.APPLICATION_JSON)
+    public Response index() {
+        Gson gson = new Gson();
+        return Response.ok(gson.toJson(this.cm.servers)).build();
+    }
 
     /**
      * POST method for updating or creating an instance of ConnectionResource
@@ -38,9 +52,10 @@ public class ConnectionResource {
      * @return 
      */
     @POST
-    @Consumes(MediaType.APPLICATION_JSON)
-    public Response putJson(String server) {
+    @Consumes(MediaType.TEXT_PLAIN)
+    public Response post(String server) {
+        System.out.println(server);
         this.cm.addServer(server);
-        return Response.noContent().build();
+        return Response.ok().build();
     }
 }

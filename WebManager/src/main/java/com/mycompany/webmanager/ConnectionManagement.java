@@ -13,9 +13,8 @@ import java.util.ArrayList;
  */
 public class ConnectionManagement {
     public static ConnectionManagement instance;
-    private Integer pos;
-    private final ArrayList<String> servers;
-    
+    public final ArrayList<String> servers;
+    private Integer pos;    
 
     private ConnectionManagement() {
         this.servers = new ArrayList<>();
