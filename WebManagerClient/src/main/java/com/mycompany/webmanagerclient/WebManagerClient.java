@@ -25,7 +25,7 @@ public class WebManagerClient {
     
     public WebManagerClient(String ip, int port) {
         this.BASE_URL = "http://" + ip + ":" + port 
-            + "/WebService/webresources/files";
+            + "/WebManager/webresources/shared_files";
     }
     
     public boolean downloadFile(String filename, String folderPath) {
