@@ -55,7 +55,9 @@ public class ConnectionResource {
     @Consumes(MediaType.TEXT_PLAIN)
     public Response post(String server) {
         System.out.println(server);
-        this.cm.addServer(server);
+        if (!this.cm.getServers().contains(server)) {
+            this.cm.addServer(server);
+        }
         return Response.ok().build();
     }
 }

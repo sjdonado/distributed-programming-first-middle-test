@@ -46,7 +46,10 @@ public class SharedFilesResource {
     @GET
     @Produces(MediaType.APPLICATION_JSON)
     public Response index() {
-        ArrayList<String> serversClone = this.cm.getServers();
+        ArrayList<String> serversClone = new ArrayList<>();
+        this.cm.getServers().forEach(server -> {
+            serversClone.add(server);
+        });
         while (!serversClone.isEmpty()) {
             String selectedServer = this.cm.getServer();
             serversClone.remove(selectedServer);
@@ -98,7 +101,10 @@ public class SharedFilesResource {
     @Path("{filename}")
     @Produces(MediaType.APPLICATION_OCTET_STREAM)
     public Response show(@PathParam("filename") String filename) {
-        ArrayList<String> serversClone = this.cm.getServers();
+        ArrayList<String> serversClone = new ArrayList<>();
+        this.cm.getServers().forEach(server -> {
+            serversClone.add(server);
+        });
         while (!serversClone.isEmpty()) {
             String selectedServer = this.cm.getServer();
             serversClone.remove(selectedServer);
