@@ -40,7 +40,7 @@ public class ConnectionManagement {
         });
         String server;   
         synchronized (pos) {   
-            if (pos > serverList.size()) {
+            if (pos >= serverList.size()) {
                 pos = 0;   
             }    
             server = serverList.get(pos);   

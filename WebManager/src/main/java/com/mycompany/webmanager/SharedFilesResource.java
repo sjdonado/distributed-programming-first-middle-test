@@ -54,7 +54,7 @@ public class SharedFilesResource {
             String selectedServer = this.cm.getServer();
             serversClone.remove(selectedServer);
             try{
-                String endpoint = "http://" + this.cm.getServer() 
+                String endpoint = "http://" + selectedServer
                     + "/WebService/webresources/files";
                 String methodType="GET";
                 URL url = new URL(endpoint);
@@ -109,7 +109,7 @@ public class SharedFilesResource {
             String selectedServer = this.cm.getServer();
             serversClone.remove(selectedServer);
             try{
-                String endpoint = "http://" + this.cm.getServer() 
+                String endpoint = "http://" + selectedServer
                     + "/WebService/webresources/files";
                 URL url = new URL(endpoint + "/" + filename);
                 String methodType = "GET";

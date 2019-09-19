@@ -397,13 +397,15 @@ public class GUI extends javax.swing.JFrame implements TCPServiceManagerCallerIn
     private void fetchFiles() {
         fileTableModel.setRowCount(0);
         this.sharedFiles = this.webManagerClient.fetchFiles();
-        for(SharedFile file : this.sharedFiles) {
-            String parsedFileSize = FileUtils
-                .byteCountToDisplaySize(file.getSize());
-            String parsedDate = FILE_DATE_FORMAT.format(file.getCreatedAt());
-            fileTableModel.addRow(
-                new Object[]{file.getName(), parsedDate, parsedFileSize}
-            );
+        if (this.sharedFiles != null) {
+            for(SharedFile file : this.sharedFiles) {
+                String parsedFileSize = FileUtils
+                    .byteCountToDisplaySize(file.getSize());
+                String parsedDate = FILE_DATE_FORMAT.format(file.getCreatedAt());
+                fileTableModel.addRow(
+                    new Object[]{file.getName(), parsedDate, parsedFileSize}
+                );
+            }
         }
     }
     
