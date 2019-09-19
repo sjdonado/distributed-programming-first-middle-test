@@ -129,7 +129,7 @@ public class TCPClientManager extends Thread {
                 if (initializeStreams()) {
                     sendMessage(new byte[] {0, 0});
                     byte[] chunk = new byte[1500];
-                    int data, index = 4, remainingBytes;
+                    int data, index = 5, remainingBytes;
                     int position = 0;
                     while ((data = this.reader.read()) != -1) {
                         remainingBytes = this.reader.available();
@@ -140,17 +140,17 @@ public class TCPClientManager extends Thread {
                         if (index == 1499 || remainingBytes == 0) {
 //                            Logger.getLogger(TCPClientManager.class.getName())
 //                                    .log(Level.INFO, "INDEX: {0} CHUNK - 4:{1} 5:{2}", new Object[]{index, (chunk[4] &255), (chunk[5] &255)});
-                            if (index == 5) {
-                                if ((chunk[4] &255) == 0 && (chunk[5] &255) == 0) {
+                            if (index == 6) {
+                                if ((chunk[5] &255) == 0 && (chunk[6] &255) == 0) {
                                     this.caller.messageReceivedFromClient(
                                         clientSocket,
                                         "Successful connection"
                                     );
                                 }
-                                if ((chunk[4] &255) == 0 && (chunk[5] &255) > 0) {
+                                if ((chunk[5] &255) == 0 && (chunk[6] &255) > 0) {
                                     this.caller.messageReceivedFromClient(
                                         clientSocket,
-                                        (chunk[5] &255) + "%"
+                                        (chunk[6] &255) + "%"
                                     );
                                 }
                             } else {
@@ -163,6 +163,7 @@ public class TCPClientManager extends Thread {
                                 chunk[1] = offset[1];
                                 chunk[2] = offset[2];
                                 chunk[3] = offset[3];
+                                chunk[4] = offset[4];
 //                                Logger.getLogger(
 //                                    TCPClientManager.class.getName()).log(Level.INFO,
 //                                        "CHUNK ReceivedFromClient {0} {1}",
@@ -172,7 +173,7 @@ public class TCPClientManager extends Thread {
                                 position++;
                                 Arrays.fill(chunk, (byte) 0);
                             }
-                            index = 3;
+                            index = 4;
                         }
                         index += 1;
                     }
@@ -220,8 +221,8 @@ public class TCPClientManager extends Thread {
             if (this.clientSocket.isConnected()) {
                 
                 String metadata = file.getName() + "/*/" + file.length();
-                if (metadata.length() < 1496) {
-                    char[] chars = new char[1496 - metadata.length()];
+                if (metadata.length() < 1495) {
+                    char[] chars = new char[1495 - metadata.length()];
                     Arrays.fill(chars, '\0');
                     metadata += new String(chars);
                 }

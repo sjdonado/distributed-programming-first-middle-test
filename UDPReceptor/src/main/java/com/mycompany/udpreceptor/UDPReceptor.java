@@ -55,36 +55,37 @@ public class UDPReceptor implements UDPManagerCallerInterface {
             int position = Utils.getPositionFromHeader(data);
             boolean finalChunk = Utils.getFinalBitFromHeader(data);
 
-            byte[] headlessChunk = Arrays.copyOfRange(data, 4, data.length);
-//            Logger.getLogger(UDPReceptor.class.getName()).log(
-//                Level.INFO,
-//                "CHUNK - ReceptorId: {0} - |{1}|{2}|{3}|{4}| - {5}:{6} \n"
-//                        + "DATA: {7} \n",
-//                new Object[] {
-//                    receptorId,
-//                    String.format("HEAD[0] => %8s", Integer.toBinaryString(data[0] & 0xFF)).replace(' ', '0'),
-//                    String.format("HEAD[1] => %8s", Integer.toBinaryString(data[1] & 0xFF)).replace(' ', '0'),
-//                    String.format("HEAD[2] => %8s", Integer.toBinaryString(data[2] & 0xFF)).replace(' ', '0'),
-//                    String.format("HEAD[3] => %8s", Integer.toBinaryString(data[3] & 0xFF)).replace(' ', '0'),
-//                    ipAdress,
-//                    sourcePort,
-//                    new String(headlessChunk),
-//                }
-//            );
+            byte[] headlessChunk = Arrays.copyOfRange(data, 5, data.length);
+            Logger.getLogger(UDPReceptor.class.getName()).log(
+                Level.INFO,
+                "CHUNK - ReceptorId: {0} - |{1}|{2}|{3}|{4}|{5} - {6}:{7} \n"
+                        + "DATA: {8} \n",
+                new Object[] {
+                    receptorId,
+                    String.format("HEAD[0] => %8s", Integer.toBinaryString(data[0] & 0xFF)).replace(' ', '0'),
+                    String.format("HEAD[1] => %8s", Integer.toBinaryString(data[1] & 0xFF)).replace(' ', '0'),
+                    String.format("HEAD[2] => %8s", Integer.toBinaryString(data[2] & 0xFF)).replace(' ', '0'),
+                    String.format("HEAD[3] => %8s", Integer.toBinaryString(data[3] & 0xFF)).replace(' ', '0'),
+                    String.format("HEAD[4] => %8s", Integer.toBinaryString(data[4] & 0xFF)).replace(' ', '0'),
+                    ipAdress,
+                    sourcePort,
+                    new String(headlessChunk),
+                }
+            );
             if ((clientFile = Utils.getClientFile(clientSocketId, clientFiles)) == null) {
                 clientFiles.add(new ClientFile(receptorId, clientSocketId,
                         Utils.getFilePath(headlessChunk),
                         Utils.getFileSize(headlessChunk))
                 );
             } else {
-                int progress = (int) (((double) (clientFile.getChunks().size()) / (clientFile.getSize() / 1496)) * 100);
+                int progress = (int) (((double) (clientFile.getChunks().size()) / (clientFile.getSize() / 1495)) * 100);
                 if (finalChunk) {
                     byte [] finalHeadlessChunk = headlessChunk;
-                    if (clientFile.getSize() % 1496 > 0) {
+                    if (clientFile.getSize() % 1495 > 0) {
                         finalHeadlessChunk = Arrays.copyOfRange(
                             headlessChunk,
                             0,
-                            (int) clientFile.getSize() % 1496
+                            (int) clientFile.getSize() % 1495
                         );
                     }
 

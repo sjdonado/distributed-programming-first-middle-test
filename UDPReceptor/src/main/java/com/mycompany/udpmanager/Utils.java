@@ -6,15 +6,10 @@
 package com.mycompany.udpmanager;
 
 import com.mycompany.udpreceptor.UDPReceptor;
-import java.io.BufferedInputStream;
-import java.io.BufferedOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
-import java.io.FileWriter;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -24,65 +19,47 @@ import java.util.stream.Collectors;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 
-
 /**
  *
  * @author sjdonado
  */
 public class Utils {
-    private static int unsignedToBytes(byte b) {
-        return b & 0xFF;
-    }
-    
+//    private static int unsignedToBytes(byte b) {
+//        return b & 0xFF;
+//    }
     public static int getClientSocketIdFromHeader(byte[] data) {
-        String byte4 = Integer.toBinaryString((data[3] & 0xFF) + 0x100).substring(1);
+        String byte5 = Integer.toBinaryString((data[4] & 0xFF) + 0x100).substring(1);
         
-        int clientSocketId = Integer.parseInt(byte4.substring(1, 7));
+        int clientSocketId = Integer.parseInt(byte5.substring(1, 8));
         return clientSocketId;
     }
     
     public static int getPositionFromHeader(byte[] data) {
-        int byte1 = (byte)(data[0] >> 24);
-        int byte2 = (byte)(data[1] >> 16);
-        int byte3 = (byte)(data[2] >>  8);
-//        int byte1 = unsignedToBytes(data[0]);
-//        int byte2 = unsignedToBytes(data[1]) * 2^(8);
-//        int byte3 = unsignedToBytes(data[2]) * 2^(16);
-        String byte4 = Integer.toBinaryString((data[3] & 0xFF) + 0x100).substring(1);
-        int pos = Integer.parseInt(byte4.substring(7)) * 2^(24);
-        int position = byte1 + byte2 + byte3 + pos;
-        return position;
+        return ((0xFF & data[0]) << 24) | ((0xFF & data[1]) << 16) | ((0xFF & data[2]) << 8) | (0xFF & data[3]);
     }
     
     public static boolean getFinalBitFromHeader(byte[] data) {
-        String byte4 = Integer.toBinaryString((data[3] & 0xFF) + 0x100).substring(1);
-        int fin = Integer.parseInt(byte4.substring(0,1));
-        boolean end = fin != 0;
-        return end;
+        String byte5 = Integer.toBinaryString((data[4] & 0xFF) + 0x100).substring(1);
+        int fin = Integer.parseInt(byte5.substring(0, 1));
+        return fin != 0;
     }
     
     public static byte[] createHeader(int position, int remainingBytes, int socketID) {
-        byte[] offset = new byte[4];
+        byte[] offset = new byte[5];
         
         offset[0] = (byte) (position >> 24);
         offset[1] = (byte) (position >> 16);
         offset[2] = (byte) (position >> 8);
+        offset[3] = (byte) (position);
 //        offset[0] = (byte) (position % 255);
 //        offset[1] = (byte) (position / 255);
 //        offset[2] = (byte) (position / 65535);
-        int bit25th = position / 16777215;
         
         String id = Integer.toBinaryString(socketID);
-        while (id.length() < 6){
+        while (id.length() < 7){
             id = "0" + id;
         }
-        //System.out.println((remainingBytes == 0 ? 1 : 0) + id + bit25th);
-        offset[3] = (byte) Integer.parseInt((remainingBytes == 0 ? 1 : 0) + id + bit25th);
-        //System.out.println((unsignedToBytes(offset[3]) + 0x100).substring(1));
-//        Logger.getLogger(Utils.class.getName()).log(
-//            Level.INFO,
-//            Integer.toBinaryString((offset[3] & 0xFF) + 0x100).substring(1)
-//        );
+        offset[4] = (byte) Integer.parseInt((remainingBytes == 0 ? 1 : 0) + id);
         return offset;
     }
     
@@ -92,6 +69,10 @@ public class Utils {
                 + File.separator + "domains" + File.separator + "domain1"
                 + File.separator + "uploads" + File.separator;
         String parsedData = new String(data);
+        Logger.getLogger(Utils.class.getName()).log(
+            Level.INFO,
+            "PARSED_DATA => {0}", parsedData
+        );
         String filename = parsedData.substring(0, parsedData.indexOf("/*/"));
         Logger.getLogger(Utils.class.getName()).log(
             Level.INFO,
