@@ -5,6 +5,7 @@
  */
 package com.mycompany.udpmanager;
 
+import com.mycompany.tcpmanager.TCPServiceManager;
 import java.io.IOException;
 import java.net.DatagramPacket;
 import java.net.InetAddress;
@@ -17,7 +18,7 @@ import org.apache.commons.lang3.StringUtils;
  */
 public class UDPManager extends Thread {
     private final int listeningPort = 8080;
-    private final String multicastAddress = "224.0.0.1";
+    private final String multicastAddress = "224.0.0.2";
 
     private MulticastSocket multicastSocket;
     private UDPManagerCallerInterface caller;
@@ -49,7 +50,7 @@ public class UDPManager extends Thread {
     @Override
     public void run() {
         try {
-            DatagramPacket datagramPacket = new DatagramPacket(new byte[1500], 1500);
+            DatagramPacket datagramPacket = new DatagramPacket(new byte[TCPServiceManager.MTU], TCPServiceManager.MTU);
             if (initializeMulticastSocket()) {
                 while (this.isEnabled) {
                     multicastSocket.receive(datagramPacket);
@@ -74,7 +75,7 @@ public class UDPManager extends Thread {
                             datagramPacket.getData()
                         );
                     }
-                    datagramPacket.setData(new byte[1500]);
+                    datagramPacket.setData(new byte[TCPServiceManager.MTU]);
                 }
             }
         } catch(IOException error) {

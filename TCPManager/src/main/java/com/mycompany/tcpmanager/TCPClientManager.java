@@ -128,7 +128,7 @@ public class TCPClientManager extends Thread {
                 }
                 if (initializeStreams()) {
                     sendMessage(new byte[] {0, 0});
-                    byte[] chunk = new byte[1500];
+                    byte[] chunk = new byte[TCPServiceManager.MTU];
                     int data, index = 5, remainingBytes;
                     int position = 0;
                     while ((data = this.reader.read()) != -1) {
@@ -137,7 +137,7 @@ public class TCPClientManager extends Thread {
 //                        Logger.getLogger(
 //                            TCPClientManager.class.getName()).log(Level.INFO, new String(new byte[]{stream}));
                         chunk[index] = stream;
-                        if (index == 1499 || remainingBytes == 0) {
+                        if (index == TCPServiceManager.MTU - 1 || remainingBytes == 0) {
 //                            Logger.getLogger(TCPClientManager.class.getName())
 //                                    .log(Level.INFO, "INDEX: {0} CHUNK - 4:{1} 5:{2}", new Object[]{index, (chunk[4] &255), (chunk[5] &255)});
                             if (index == 6) {
@@ -221,8 +221,8 @@ public class TCPClientManager extends Thread {
             if (this.clientSocket.isConnected()) {
                 
                 String metadata = file.getName() + "/*/" + file.length();
-                if (metadata.length() < 1495) {
-                    char[] chars = new char[1495 - metadata.length()];
+                if (metadata.length() < TCPServiceManager.MTU - 5) {
+                    char[] chars = new char[TCPServiceManager.MTU - 5 - metadata.length()];
                     Arrays.fill(chars, '\0');
                     metadata += new String(chars);
                 }
@@ -240,6 +240,9 @@ public class TCPClientManager extends Thread {
                 IOUtils.copy(fileInputStream, this.writer);
                 
                 this.writer.flush();
+                
+                Logger.getLogger(TCPClientManager.class.getName())
+                    .log(Level.INFO, "FILE SENT TO GATEWAY");
             }
         } catch (IOException ex) {
             this.caller.errorHasBeenThrown(ex);

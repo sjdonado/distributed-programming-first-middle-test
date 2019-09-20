@@ -7,11 +7,9 @@ package com.mycompany.tcpmanager;
 
 import com.mycompany.udpmanager.UDPManager;
 import com.mycompany.udpmanager.UDPManagerCallerInterface;
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -21,6 +19,7 @@ import java.util.logging.Logger;
  * @author sjdonado
  */
 public class TCPServiceManager extends Thread implements TCPServiceManagerCallerInterface, UDPManagerCallerInterface {
+    public static final int MTU = 10000;
     private final int NUMBER_OF_THREADS = 3; // DEVELOPMENT ENV, FOR PROD ENV CHANGE TO 50
     private ServerSocket serverSocket;
     private final int port;
