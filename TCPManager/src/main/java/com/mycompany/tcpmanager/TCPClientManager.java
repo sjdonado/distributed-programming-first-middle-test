@@ -97,21 +97,14 @@ public class TCPClientManager extends Thread {
     public boolean initializeStreams(){
         try {
             if (this.clientSocket == null) {
-                if (!initializeSocket()) {
-                    return false;
-                }
+                if (!initializeSocket()) return false;
             }
-
             if (this.writer == null)
                 this.writer = new BufferedOutputStream(clientSocket.getOutputStream());
 
             if (this.reader == null)
                 this.reader = new BufferedInputStream(clientSocket.getInputStream());
-
-//            if (this.printWriter == null)
-//                this.printWriter = new PrintWriter(
-//                    new OutputStreamWriter(clientSocket.getOutputStream()), true);
-
+            
             return true;
         } catch (IOException ex) {
             caller.errorHasBeenThrown(ex);
