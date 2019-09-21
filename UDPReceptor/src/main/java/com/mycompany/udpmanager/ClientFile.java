@@ -5,6 +5,7 @@
  */
 package com.mycompany.udpmanager;
 
+import java.net.InetAddress;
 import java.util.ArrayList;
 
 /**
@@ -13,16 +14,18 @@ import java.util.ArrayList;
  */
 public class ClientFile {
     private final int receptorId;
+    private final String senderAddress;
     private final int clientSocketId;
     private final String path;
     private final long size;
     private final ArrayList<Chunk> chunks;
 
-    public ClientFile(int receptorId, int clientSocketId, String filePath,
+    public ClientFile(int receptorId, int clientSocketId, String filePath, String senderAddress,
             long fileSize) {
         this.receptorId = receptorId;
         this.clientSocketId = clientSocketId;
         this.path = filePath;
+        this.senderAddress = senderAddress;
         this.size = fileSize;
         this.chunks = new ArrayList<>();
     }

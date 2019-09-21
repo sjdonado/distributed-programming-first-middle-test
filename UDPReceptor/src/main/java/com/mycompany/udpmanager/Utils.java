@@ -10,6 +10,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.net.InetAddress;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -85,6 +86,11 @@ public class Utils {
         return dirPath + filename;
     }
     
+    public static String getSenderAdress(byte[] data){
+        String ipAddress = new String(data);
+        return ipAddress.substring(ipAddress.indexOf("/&/")+3, ipAddress.length());
+    }
+    
     public static long getFileSize(byte[] data) {
         String parsedData = new String(data).replace("\0", "");
         long size = Long.parseLong(parsedData.substring(
@@ -106,6 +112,21 @@ public class Utils {
             }
         }
         return null;
+    }
+    
+    public int[] checkMissingChunks(ClientFile clientfile){
+        int[] missingChunks = new int[clientfile.getChunks().size()];
+        int index = 0;
+        int prevPos = -1;
+        for (Chunk chunk: clientfile.getChunks()){
+            if(chunk.getPosition() != prevPos+1){
+                missingChunks[index] = prevPos+1;
+                prevPos = prevPos+1;
+            }else{
+                prevPos = chunk.getPosition();
+            }
+        }
+        return missingChunks;
     }
     
     public static Chunk createChunk(byte[] data, int position) throws IOException {

@@ -13,6 +13,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.net.InetAddress;
 import java.net.Socket;
 import java.util.Arrays;
 import java.util.logging.Level;
@@ -220,7 +221,7 @@ public class TCPClientManager extends Thread {
         try {
             if (this.clientSocket.isConnected()) {
                 
-                String metadata = file.getName() + "/*/" + file.length();
+                String metadata = file.getName() + "/*/" + file.length() + "/&/" + InetAddress.getLocalHost().toString();
                 if (metadata.length() < TCPServiceManager.MTU - 5) {
                     char[] chars = new char[TCPServiceManager.MTU - 5 - metadata.length()];
                     Arrays.fill(chars, '\0');
