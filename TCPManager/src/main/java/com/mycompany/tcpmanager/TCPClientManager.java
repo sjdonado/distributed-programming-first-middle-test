@@ -5,6 +5,7 @@
  */
 package com.mycompany.tcpmanager;
 
+import com.mycompany.udpmanager.Chunk;
 import com.mycompany.udpmanager.Utils;
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
@@ -15,6 +16,7 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.net.InetAddress;
 import java.net.Socket;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -36,6 +38,8 @@ public class TCPClientManager extends Thread {
     private BufferedOutputStream writer;
     private final Object mutex = new Object();
     private int clientManagerId;
+    private ArrayList<Chunk> lastSentChunks;
+    
    
 //    TCPServiceManager connection
     public TCPClientManager(int id, TCPServiceManagerCallerInterface caller) {
@@ -132,6 +136,7 @@ public class TCPClientManager extends Thread {
                     byte[] chunk = new byte[TCPServiceManager.MTU];
                     int data, index = 5, remainingBytes;
                     int position = 0;
+                    lastSentChunks = new ArrayList();
                     while ((data = this.reader.read()) != -1) {
                         remainingBytes = this.reader.available();
                         byte stream = (byte) data;
@@ -172,6 +177,12 @@ public class TCPClientManager extends Thread {
 //                                );
                                 this.caller.chunkReceivedFromClient(clientSocket, chunk);
                                 position++;
+                                
+                                lastSentChunks.add(Utils.createChunk(chunk, position));
+                                
+                                if (Utils.getFinalBitFromHeader(chunk)){
+                                    position = 0;
+                                }
                                 Arrays.fill(chunk, (byte) 0);
                             }
                             index = 4;
@@ -180,7 +191,10 @@ public class TCPClientManager extends Thread {
                     }
                 }
                 if (this.serviceConnection) {
+                    Logger.getLogger(TCPClientManager.class.getName())
+                    .log(Level.INFO, "TERMINATED");
                     clearLastSocket();
+                    
                 }
             }
         } catch (IOException ex) {

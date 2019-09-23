@@ -10,7 +10,6 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.net.InetAddress;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -86,16 +85,17 @@ public class Utils {
         return dirPath + filename;
     }
     
-    public static String getSenderAdress(byte[] data){
+    public static String getSenderAddress(byte[] data){
         String ipAddress = new String(data);
-        return ipAddress.substring(ipAddress.indexOf("/&/")+3, ipAddress.length());
+        ipAddress = ipAddress.substring(ipAddress.indexOf("/&/")+3, ipAddress.length());
+        return ipAddress.substring(ipAddress.indexOf("/")+1,ipAddress.length());
     }
     
     public static long getFileSize(byte[] data) {
         String parsedData = new String(data).replace("\0", "");
         long size = Long.parseLong(parsedData.substring(
                 parsedData.indexOf("/*/") + 3,
-                parsedData.length())
+                parsedData.indexOf("/&/"))
         );
         Logger.getLogger(Utils.class.getName()).log(
             Level.INFO,
@@ -114,21 +114,6 @@ public class Utils {
         return null;
     }
     
-    public int[] checkMissingChunks(ClientFile clientfile){
-        int[] missingChunks = new int[clientfile.getChunks().size()];
-        int index = 0;
-        int prevPos = -1;
-        for (Chunk chunk: clientfile.getChunks()){
-            if(chunk.getPosition() != prevPos+1){
-                missingChunks[index] = prevPos+1;
-                prevPos = prevPos+1;
-            }else{
-                prevPos = chunk.getPosition();
-            }
-        }
-        return missingChunks;
-    }
-    
     public static Chunk createChunk(byte[] data, int position) throws IOException {
         File tempChunkFile = File.createTempFile("chunk", null);
         FileUtils.writeByteArrayToFile(tempChunkFile, data);
@@ -139,17 +124,51 @@ public class Utils {
         return new Chunk(position, tempChunkFile.getAbsolutePath());
     }
     
-    public static boolean createFileByClientSocketId(String filePath,
-            ArrayList<Chunk> fileChunks) {
-        
+    public static ArrayList<Chunk> organizeChunks(ArrayList<Chunk> fileChunks){
         Comparator<Chunk> comparator = (Chunk c1, Chunk c2) ->
                 (new Integer(c1.getPosition())).compareTo(new Integer(c2.getPosition()));
         
         Collections.sort(fileChunks, comparator);
-        System.out.println("fileChunks => " + fileChunks
-                        .stream()
-                        .map(v -> v.getPosition())
-                        .collect(Collectors.toList()));
+        return fileChunks;
+    }
+    
+    public static ArrayList<Integer> getChunksPositions(ArrayList<Chunk> chunks){
+        ArrayList<Integer> chunksPositions = new ArrayList();
+        for (Chunk chunk: chunks){
+            chunksPositions.add(chunk.getPosition());
+        }
+        return chunksPositions;
+    }
+    
+    public static ArrayList<Integer> checkMissingChunks(ArrayList<Integer> chunksPositions){
+        ArrayList<Integer> missingChunks = new ArrayList();
+        for (int i = 1; i <= chunksPositions.get(chunksPositions.size()-1); i++){
+            if (!chunksPositions.contains(i)){
+                missingChunks.add(i);
+            }
+        }
+        return missingChunks;
+    }
+    
+    public static boolean createFileByClientSocketId(String filePath,
+            ArrayList<Chunk> fileChunks) {
+        
+        fileChunks = organizeChunks(fileChunks);
+        
+        ArrayList<Integer> chunksPositions = getChunksPositions(fileChunks);
+        ArrayList<Integer> missingChunks = checkMissingChunks(chunksPositions);
+        
+        for (int chunkpos: missingChunks){
+            System.out.println("missing: "+chunkpos);
+        }
+        
+        for (Chunk chunk: fileChunks){
+            System.out.println("pos: "+chunk.getPosition());
+        }
+//        System.out.println("fileChunks => " + fileChunks
+//                        .stream()
+//                        .map(v -> v.getPosition())
+//                        .collect(Collectors.toList()));
         try {
             FileInputStream input;
             FileOutputStream output;
