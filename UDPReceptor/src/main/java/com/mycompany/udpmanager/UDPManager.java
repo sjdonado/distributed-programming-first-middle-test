@@ -8,8 +8,10 @@ package com.mycompany.udpmanager;
 import com.mycompany.tcpmanager.TCPServiceManager;
 import java.io.IOException;
 import java.net.DatagramPacket;
+import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.net.MulticastSocket;
+import java.net.SocketException;
 import org.apache.commons.lang3.StringUtils;
 
 /**
@@ -20,7 +22,8 @@ public class UDPManager extends Thread {
     private final int listeningPort = 8080;
     private final String multicastAddress = "224.0.0.2";
 
-    private MulticastSocket multicastSocket;
+    public MulticastSocket multicastSocket;
+    private DatagramSocket datagramSocket;
     private UDPManagerCallerInterface caller;
     private boolean isEnabled = true;
     private int receptorId;
@@ -47,6 +50,7 @@ public class UDPManager extends Thread {
         return false;
     }
     
+    
     @Override
     public void run() {
         try {
@@ -54,8 +58,11 @@ public class UDPManager extends Thread {
             if (initializeMulticastSocket()) {
                 while (this.isEnabled) {
                     multicastSocket.receive(datagramPacket);
-                    String parsedData = new String(datagramPacket.getData())
+                    //multicastSocket.setSoTimeout(2000);
+                    byte[] byteArray = datagramPacket.getData();
+                    String parsedData = new String(byteArray)
                             .replace("\0", "");
+                    
                     if (parsedData.length() <= 6
                         && parsedData.contains("|")
                         && StringUtils.isNumeric(parsedData.substring(0, parsedData.indexOf("|")))
@@ -68,25 +75,39 @@ public class UDPManager extends Thread {
                         );
                         this.caller.clientUploadFileStatus(socketClientId, progress);
                     } else {
-                        this.caller.dataReceived(
-                            this.receptorId,
-                            datagramPacket.getAddress().toString(),
-                            datagramPacket.getPort(),
-                            datagramPacket.getData()
-                        );
+                        boolean unicast = Utils.getUnicastBitFromHeader(byteArray);
+                        if (unicast) {
+                            this.caller.sendMissingChunksPositions(Utils.getClientSocketIdFromHeader(byteArray), byteArray, null);
+                        } else {
+                            this.caller.dataReceived(
+                                this.receptorId,
+                                datagramPacket.getAddress().toString(),
+                                datagramPacket.getPort(),
+                                byteArray
+                            );
+                        }
+                        
                     }
                     datagramPacket.setData(new byte[TCPServiceManager.MTU]);
+                    multicastSocket.setSoTimeout(2000);
                 }
             }
-        } catch(IOException error) {
+        } catch(SocketException error) {
+            //this.caller.exceptionHasBeenThrown(error);
+//            this.caller.timeoutExpired();
+        } catch(IOException error){
             this.caller.exceptionHasBeenThrown(error);
         }
     }
     
-    public boolean sendMessage(byte[] data) {
+    public boolean sendMessage(byte[] data, String destAddress) {
         try {
             DatagramPacket datagramPacketToBeSent = new DatagramPacket(data, data.length);
-            datagramPacketToBeSent.setAddress(InetAddress.getByName(this.multicastAddress));
+            if (destAddress == null){
+                datagramPacketToBeSent.setAddress(InetAddress.getByName(this.multicastAddress));
+            }else{
+                datagramPacketToBeSent.setAddress(InetAddress.getByName(destAddress));
+            }
             datagramPacketToBeSent.setPort(this.listeningPort);
             multicastSocket.send(datagramPacketToBeSent);
             return true;

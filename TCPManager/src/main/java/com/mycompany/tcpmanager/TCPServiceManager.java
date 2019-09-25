@@ -5,14 +5,22 @@
  */
 package com.mycompany.tcpmanager;
 
+import com.mycompany.udpmanager.Chunk;
 import com.mycompany.udpmanager.UDPManager;
 import com.mycompany.udpmanager.UDPManagerCallerInterface;
+import java.io.BufferedInputStream;
+import java.io.ByteArrayInputStream;
+import java.io.DataInputStream;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.ArrayList;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import org.apache.commons.io.IOUtils;
 
 /**
  *
@@ -102,7 +110,7 @@ public class TCPServiceManager extends Thread implements TCPServiceManagerCaller
     
     @Override
     public void chunkReceivedFromClient(Socket clientSocket, byte[] data) {
-        udpManager.sendMessage(data);
+        udpManager.sendMessage(data,null);
     }
 
     @Override
@@ -127,4 +135,50 @@ public class TCPServiceManager extends Thread implements TCPServiceManagerCaller
         if (progress == 0) progress = 1;
         clients.get(clientManagerId).sendMessage(new byte[] {0, (byte) progress});
     }
+
+    @Override
+    public void sendMissingChunksPositions(int clientSocket, byte[] data, String destAddress) {
+        //throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        ArrayList<Chunk> lastSentChunks = ((TCPClientManager) clients.get(clientSocket)).lastSentChunks;
+        ArrayList<Integer> positions = new ArrayList();
+        
+        ByteArrayInputStream bais = new ByteArrayInputStream(data);
+        DataInputStream in = new DataInputStream(bais);
+        try {
+            while (in.available() > 0) {
+                String element = in.readUTF();
+                positions.add(Integer.parseInt(element));
+            }
+        } catch (IOException ex) {
+            Logger.getLogger(TCPServiceManager.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        
+        
+        for (Chunk chunk: lastSentChunks){
+            for(Integer position: positions){
+                if (chunk.getPosition() == position){
+                    File tempFileChunk = new File(chunk.getFilePath());
+                    try {
+                        BufferedInputStream chunkStream = new BufferedInputStream(new FileInputStream(tempFileChunk));
+                        byte[] chunkToBeRetransmitted = IOUtils.toByteArray(chunkStream);
+                        udpManager.sendMessage(chunkToBeRetransmitted, destAddress);
+                    } catch (FileNotFoundException ex) {
+                        Logger.getLogger(TCPServiceManager.class.getName()).log(Level.SEVERE, null, ex);
+                    } catch (IOException ex) {
+                        Logger.getLogger(TCPServiceManager.class.getName()).log(Level.SEVERE, null, ex);
+                    }
+                }
+            }
+        }
+        
+        
+        
+        
+    }
+
+    @Override
+    public void timeoutExpired() {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
+
 }
