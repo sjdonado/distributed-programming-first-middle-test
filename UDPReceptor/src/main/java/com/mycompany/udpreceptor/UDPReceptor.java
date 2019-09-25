@@ -25,6 +25,7 @@ public class UDPReceptor implements UDPManagerCallerInterface {
     private final int NUMBER_OF_RECEPTORS = 1;
     private final ArrayList<UDPManager> receptors = new ArrayList<>();
     private final ArrayList<ClientFile> clientFiles = new ArrayList<>();
+    private byte[] lastMetadataReceived;
     
     public UDPReceptor() {
         initializeReceptors();
@@ -74,13 +75,14 @@ public class UDPReceptor implements UDPManagerCallerInterface {
 //                }
 //            );
             if ((clientFile = Utils.getClientFile(clientSocketId, clientFiles)) == null) {
+                lastMetadataReceived = data;
                 clientFiles.add(new ClientFile(receptorId, clientSocketId,
                     Utils.getFilePath(headlessChunk),Utils.getSenderAddress(data),
                     Utils.getFileSize(headlessChunk))
                 );
             } else {
                 int progress = (int) (((double) (clientFile.getChunks().size()) / (clientFile.getSize() / TCPServiceManager.MTU - 5)) * 100);
-                if (Utils.checkMissingChunks(Utils.getChunksPositions(clientFile.getChunks())).isEmpty()) {
+                if (Utils.checkMissingChunks(Utils.getChunksPositions(clientFile.getChunks()),clientFile.getSize() / TCPServiceManager.MTU).isEmpty()) {
                     byte [] finalHeadlessChunk = headlessChunk;
                     if (clientFile.getSize() % TCPServiceManager.MTU - 5 > 0) {
                         finalHeadlessChunk = Arrays.copyOfRange(
@@ -94,7 +96,7 @@ public class UDPReceptor implements UDPManagerCallerInterface {
                         finalHeadlessChunk,
                         position
                     ));
-                    if (Utils.createFileByClientSocketId(clientFile.getPath(), clientFile.getChunks())) {
+                    if (Utils.createFileByClientSocketId(clientFile.getPath(), clientFile.getChunks(),clientFile.getSize() / TCPServiceManager.MTU)) {
                         receptors.get(receptorId).sendMessage((clientSocketId + "|" + 100).getBytes(),null);
                         clientFiles.remove(clientFile);
                     }
@@ -124,7 +126,7 @@ public class UDPReceptor implements UDPManagerCallerInterface {
 
     @Override
     public void sendMissingChunksPositions(int clientSocket, byte[] data, String destAddress) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+       // throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
 
     @Override
@@ -136,8 +138,13 @@ public class UDPReceptor implements UDPManagerCallerInterface {
             
             receptors.get(receptorId).sendMessage(
                 Utils.getMissingChunksPositions(clientFile, TCPServiceManager.MTU),
-                Utils.getSenderAddress(lastChunkReceived)
+                Utils.getSenderAddress(lastMetadataReceived)
             );
+            
+            Logger.getLogger(
+                UDPReceptor.class.getName()).log(Level.INFO,
+                        "RETRANSMISSION  ==> {0}", Utils.getMissingChunksPositions(clientFile, TCPServiceManager.MTU) );
+            
         }
     }
 }

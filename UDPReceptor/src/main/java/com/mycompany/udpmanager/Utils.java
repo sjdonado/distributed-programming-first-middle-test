@@ -146,9 +146,9 @@ public class Utils {
         return chunksPositions;
     }
     
-    public static ArrayList<Integer> checkMissingChunks(ArrayList<Integer> chunksPositions){
+    public static ArrayList<Integer> checkMissingChunks(ArrayList<Integer> chunksPositions, long numberOfChunks){
         ArrayList<Integer> missingChunks = new ArrayList();
-        for (int i = 1; i <= chunksPositions.get(chunksPositions.size()-1); i++){
+        for (int i = 1; i <= numberOfChunks; i++){
             if (!chunksPositions.contains(i)){
                 missingChunks.add(i);
             }
@@ -157,11 +157,11 @@ public class Utils {
     }
     
     public static boolean createFileByClientSocketId(String filePath,
-            ArrayList<Chunk> fileChunks) {
+            ArrayList<Chunk> fileChunks, long numberOfChunks) {
         
         fileChunks = organizeChunks(fileChunks);
         ArrayList<Integer> chunksPositions = getChunksPositions(fileChunks);
-        ArrayList<Integer> missingChunks = checkMissingChunks(chunksPositions);
+        ArrayList<Integer> missingChunks = checkMissingChunks(chunksPositions, numberOfChunks);
         
         for (int chunkpos: missingChunks){
             System.out.println("missing: " + chunkpos);
@@ -198,7 +198,7 @@ public class Utils {
     }
     
     public static byte[] getMissingChunksPositions(ClientFile clientFile, int MTU) {
-        ArrayList<Integer> missingChunks = checkMissingChunks(getChunksPositions(clientFile.getChunks()));
+        ArrayList<Integer> missingChunks = checkMissingChunks(getChunksPositions(clientFile.getChunks()), clientFile.getSize()/MTU);
         int payloadCounter = 0, index = 0;
         byte [] finalArr = new byte[MTU - 5];
         while (index < missingChunks.size()) {

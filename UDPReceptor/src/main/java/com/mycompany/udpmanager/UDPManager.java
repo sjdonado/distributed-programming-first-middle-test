@@ -28,6 +28,7 @@ public class UDPManager extends Thread {
     private boolean isEnabled = true;
     private int receptorId;
     private byte[] lastChunkReceived;
+    private byte[] lastMetadataReceived;
 
     public UDPManager(int receptorId, UDPManagerCallerInterface caller) {
         this.receptorId = receptorId;
