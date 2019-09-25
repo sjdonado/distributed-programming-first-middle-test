@@ -82,7 +82,7 @@ public class UDPManager extends Thread {
                         );
                         boolean unicast = Utils.getUnicastBitFromHeader(byteArray);
                         if(unicast){
-                            this.caller.sendMissingChunksPositions(Utils.getClientSocketIdFromHeader(byteArray), byteArray);
+                            this.caller.sendMissingChunksPositions(Utils.getClientSocketIdFromHeader(byteArray), byteArray, null);
                         }else{
                             
                             this.caller.dataReceived(

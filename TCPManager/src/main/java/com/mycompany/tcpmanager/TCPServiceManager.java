@@ -8,14 +8,19 @@ package com.mycompany.tcpmanager;
 import com.mycompany.udpmanager.Chunk;
 import com.mycompany.udpmanager.UDPManager;
 import com.mycompany.udpmanager.UDPManagerCallerInterface;
+import java.io.BufferedInputStream;
 import java.io.ByteArrayInputStream;
 import java.io.DataInputStream;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.ArrayList;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import org.apache.commons.io.IOUtils;
 
 /**
  *
@@ -132,7 +137,7 @@ public class TCPServiceManager extends Thread implements TCPServiceManagerCaller
     }
 
     @Override
-    public void sendMissingChunksPositions(int clientSocket, byte[] data) {
+    public void sendMissingChunksPositions(int clientSocket, byte[] data, String destAddress) {
         //throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
         ArrayList<Chunk> lastSentChunks = ((TCPClientManager) clients.get(clientSocket)).lastSentChunks;
         ArrayList<Integer> positions = new ArrayList();
@@ -148,9 +153,23 @@ public class TCPServiceManager extends Thread implements TCPServiceManagerCaller
             Logger.getLogger(TCPServiceManager.class.getName()).log(Level.SEVERE, null, ex);
         }
         
-//        for (Integer position: positions){
-//            udpManager.sendMessage(
-//        }
+        
+        for (Chunk chunk: lastSentChunks){
+            for(Integer position: positions){
+                if (chunk.getPosition() == position){
+                    File tempFileChunk = new File(chunk.getFilePath());
+                    try {
+                        BufferedInputStream chunkStream = new BufferedInputStream(new FileInputStream(tempFileChunk));
+                        byte[] chunkToBeRetransmitted = IOUtils.toByteArray(chunkStream);
+                        udpManager.sendMessage(chunkToBeRetransmitted, destAddress);
+                    } catch (FileNotFoundException ex) {
+                        Logger.getLogger(TCPServiceManager.class.getName()).log(Level.SEVERE, null, ex);
+                    } catch (IOException ex) {
+                        Logger.getLogger(TCPServiceManager.class.getName()).log(Level.SEVERE, null, ex);
+                    }
+                }
+            }
+        }
         
         
         

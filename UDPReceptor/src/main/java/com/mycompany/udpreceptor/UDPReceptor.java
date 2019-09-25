@@ -135,7 +135,9 @@ public class UDPReceptor implements UDPManagerCallerInterface {
     }
 
     @Override
-    public void sendMissingChunksPositions(int clientSocket, byte[] data) {
+    public void sendMissingChunksPositions(int clientSocket, byte[] data, String destAddress) {
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
+
+    
 }
