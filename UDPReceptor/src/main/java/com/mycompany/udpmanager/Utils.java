@@ -12,16 +12,11 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.net.DatagramPacket;
-import java.net.InetAddress;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
-import java.util.Iterator;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import java.util.stream.Collectors;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 
@@ -41,7 +36,7 @@ public class Utils {
     }
     
     public static int getPositionFromHeader(byte[] data) {
-        return ((0xFF & data[0]) << 24) | ((0xFF & data[1]) << 16) | ((0xFF & data[2]) << 8) | (0xFF & data[3]);
+        return byteArrToInt(data);
     }
     
     public static boolean getUnicastBitFromHeader(byte[] data) {
@@ -51,15 +46,7 @@ public class Utils {
     }
     
     public static byte[] createHeader(int position, boolean unicast, int socketID) {
-        byte[] offset = new byte[5];
-        
-        offset[0] = (byte) (position >> 24);
-        offset[1] = (byte) (position >> 16);
-        offset[2] = (byte) (position >> 8);
-        offset[3] = (byte) (position);
-//        offset[0] = (byte) (position % 255);
-//        offset[1] = (byte) (position / 255);
-//        offset[2] = (byte) (position / 65535);
+        byte[] offset = intToByteArr(position);
         
         String id = Integer.toBinaryString(socketID);
         while (id.length() < 7){
@@ -67,6 +54,19 @@ public class Utils {
         }
         offset[4] = (byte) Integer.parseInt((unicast == true ? 1 : 0) + id);
         return offset;
+    }
+    
+    private static byte[] intToByteArr(int num) {
+        byte[] parsedInt = new byte[5];
+        parsedInt[0] = (byte) (num >> 24);
+        parsedInt[1] = (byte) (num >> 16);
+        parsedInt[2] = (byte) (num >> 8);
+        parsedInt[3] = (byte) (num);
+        return parsedInt;
+    }
+    
+    private static int byteArrToInt(byte[] data) {
+        return ((0xFF & data[0]) << 24) | ((0xFF & data[1]) << 16) | ((0xFF & data[2]) << 8) | (0xFF & data[3]);
     }
     
     public static String getFilePath(byte[] data) {
@@ -160,23 +160,21 @@ public class Utils {
             ArrayList<Chunk> fileChunks) {
         
         fileChunks = organizeChunks(fileChunks);
-        
         ArrayList<Integer> chunksPositions = getChunksPositions(fileChunks);
         ArrayList<Integer> missingChunks = checkMissingChunks(chunksPositions);
         
         for (int chunkpos: missingChunks){
-            System.out.println("missing: "+chunkpos);
+            System.out.println("missing: " + chunkpos);
         }
         
         for (Chunk chunk: fileChunks){
-            System.out.println("pos: "+chunk.getPosition());
+            System.out.println("pos: " + chunk.getPosition());
         }
 //        System.out.println("fileChunks => " + fileChunks
 //                        .stream()
 //                        .map(v -> v.getPosition())
 //                        .collect(Collectors.toList()));
         if (missingChunks.isEmpty()){
-            
             try {
                 FileInputStream input;
                 FileOutputStream output;
@@ -194,28 +192,23 @@ public class Utils {
                 Logger.getLogger(Utils.class.getName()).log(Level.SEVERE, null, ex);
                 return false;
             }
-            
-            
-        }else{
-        
-        return false;
-        
+        } else {
+            return false;
         }
-        
     }
     
-    public byte[] positionsToBytes(ArrayList<Integer> missingPositions) throws IOException{
-        
-        ByteArrayOutputStream baos = new ByteArrayOutputStream();
-        DataOutputStream out = new DataOutputStream(baos);
-        for (int i=0; i < missingPositions.size(); i++) {
-            out.writeUTF(Integer.toString(missingPositions.get(i)));
+    public static byte[] getMissingChunksPositions(ClientFile clientFile, int MTU) {
+        ArrayList<Integer> missingChunks = checkMissingChunks(getChunksPositions(clientFile.getChunks()));
+        int payloadCounter = 0, index = 0;
+        byte [] finalArr = new byte[MTU - 5];
+        while (index < missingChunks.size()) {
+            if (payloadCounter >= MTU - 5) break;
+            byte[] parsedInt = intToByteArr(missingChunks.get(index));
+            System.arraycopy(parsedInt, 0, finalArr, payloadCounter, 4);
+            payloadCounter += 5;
+            index++;
         }
-        byte[] bytes = baos.toByteArray();
         
-        return bytes;
+        return finalArr;
     }
-    
-    
-    
 }

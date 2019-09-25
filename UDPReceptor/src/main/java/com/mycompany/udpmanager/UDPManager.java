@@ -11,7 +11,7 @@ import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.net.MulticastSocket;
-import java.net.SocketException;
+import java.net.SocketTimeoutException;
 import org.apache.commons.lang3.StringUtils;
 
 /**
@@ -27,6 +27,7 @@ public class UDPManager extends Thread {
     private UDPManagerCallerInterface caller;
     private boolean isEnabled = true;
     private int receptorId;
+    private byte[] lastChunkReceived;
 
     public UDPManager(int receptorId, UDPManagerCallerInterface caller) {
         this.receptorId = receptorId;
@@ -50,13 +51,12 @@ public class UDPManager extends Thread {
         return false;
     }
     
-    
     @Override
     public void run() {
-        try {
-            DatagramPacket datagramPacket = new DatagramPacket(new byte[TCPServiceManager.MTU], TCPServiceManager.MTU);
-            if (initializeMulticastSocket()) {
-                while (this.isEnabled) {
+        DatagramPacket datagramPacket = new DatagramPacket(new byte[TCPServiceManager.MTU], TCPServiceManager.MTU);
+        if (initializeMulticastSocket()) {
+            while (this.isEnabled) {
+                try {
                     multicastSocket.receive(datagramPacket);
                     //multicastSocket.setSoTimeout(2000);
                     byte[] byteArray = datagramPacket.getData();
@@ -86,17 +86,17 @@ public class UDPManager extends Thread {
                                 byteArray
                             );
                         }
-                        
+                        lastChunkReceived = byteArray;
+                        multicastSocket.setSoTimeout(2000);
                     }
                     datagramPacket.setData(new byte[TCPServiceManager.MTU]);
-                    multicastSocket.setSoTimeout(2000);
+                } catch (SocketTimeoutException err) {
+                    System.out.println("TIME OUT ENTRY =>" + err);
+                    this.caller.timeoutExpired(this.receptorId, lastChunkReceived);
+                } catch (IOException error){
+                    this.caller.exceptionHasBeenThrown(error);
                 }
             }
-        } catch(SocketException error) {
-            //this.caller.exceptionHasBeenThrown(error);
-//            this.caller.timeoutExpired();
-        } catch(IOException error){
-            this.caller.exceptionHasBeenThrown(error);
         }
     }
     
@@ -105,7 +105,7 @@ public class UDPManager extends Thread {
             DatagramPacket datagramPacketToBeSent = new DatagramPacket(data, data.length);
             if (destAddress == null){
                 datagramPacketToBeSent.setAddress(InetAddress.getByName(this.multicastAddress));
-            }else{
+            } else {
                 datagramPacketToBeSent.setAddress(InetAddress.getByName(destAddress));
             }
             datagramPacketToBeSent.setPort(this.listeningPort);

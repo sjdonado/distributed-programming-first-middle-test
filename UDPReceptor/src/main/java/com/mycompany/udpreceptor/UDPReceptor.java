@@ -25,7 +25,6 @@ public class UDPReceptor implements UDPManagerCallerInterface {
     private final int NUMBER_OF_RECEPTORS = 1;
     private final ArrayList<UDPManager> receptors = new ArrayList<>();
     private final ArrayList<ClientFile> clientFiles = new ArrayList<>();
-    private byte[] lastReceivedChunk;
     
     public UDPReceptor() {
         initializeReceptors();
@@ -46,20 +45,16 @@ public class UDPReceptor implements UDPManagerCallerInterface {
                         "UDP receptor {0} running", index + 1);
         }
     }
-    
-    
-    
 
 //    UDPManager caller interface
     @Override
     public void dataReceived(int receptorId, String ipAdress,
             int sourcePort, byte[] data) {
         try {
-            lastReceivedChunk = data;
+//            lastReceivedChunk = data;
             ClientFile clientFile;
             int clientSocketId = Utils.getClientSocketIdFromHeader(data);
             int position = Utils.getPositionFromHeader(data);
-            boolean UnicastBit = Utils.getUnicastBitFromHeader(data);
 
             byte[] headlessChunk = Arrays.copyOfRange(data, 5, data.length);
 //            Logger.getLogger(UDPReceptor.class.getName()).log(
@@ -80,13 +75,12 @@ public class UDPReceptor implements UDPManagerCallerInterface {
 //            );
             if ((clientFile = Utils.getClientFile(clientSocketId, clientFiles)) == null) {
                 clientFiles.add(new ClientFile(receptorId, clientSocketId,
-                        Utils.getFilePath(headlessChunk),Utils.getSenderAddress(data),
-                        Utils.getFileSize(headlessChunk))
+                    Utils.getFilePath(headlessChunk),Utils.getSenderAddress(data),
+                    Utils.getFileSize(headlessChunk))
                 );
             } else {
                 int progress = (int) (((double) (clientFile.getChunks().size()) / (clientFile.getSize() / TCPServiceManager.MTU - 5)) * 100);
-                if (UnicastBit) {
-                    
+                if (Utils.checkMissingChunks(Utils.getChunksPositions(clientFile.getChunks())).isEmpty()) {
                     byte [] finalHeadlessChunk = headlessChunk;
                     if (clientFile.getSize() % TCPServiceManager.MTU - 5 > 0) {
                         finalHeadlessChunk = Arrays.copyOfRange(
@@ -100,17 +94,10 @@ public class UDPReceptor implements UDPManagerCallerInterface {
                         finalHeadlessChunk,
                         position
                     ));
-
-                    if (Utils.createFileByClientSocketId(clientFile.getPath(),clientFile.getChunks())) {
+                    if (Utils.createFileByClientSocketId(clientFile.getPath(), clientFile.getChunks())) {
                         receptors.get(receptorId).sendMessage((clientSocketId + "|" + 100).getBytes(),null);
                         clientFiles.remove(clientFile);
-                    }else{
-                         ArrayList<Integer> chunksPositions = Utils.getChunksPositions(clientFile.getChunks());
-                         ArrayList<Integer> missingChunks = Utils.checkMissingChunks(chunksPositions);
-                         
-                         
                     }
-                    
                 } else {
                     Chunk tempchunk = Utils.createChunk(headlessChunk, position);
                     if (!clientFile.getChunks().contains(tempchunk)){
@@ -141,10 +128,16 @@ public class UDPReceptor implements UDPManagerCallerInterface {
     }
 
     @Override
-    public void timeoutExpired() {
-        //throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-        
+    public void timeoutExpired(int receptorId, byte[] lastChunkReceived) {
+        ClientFile clientFile;
+        if ((clientFile = Utils.getClientFile(
+                Utils.getClientSocketIdFromHeader(lastChunkReceived),
+                clientFiles)) != null) {
+            
+            receptors.get(receptorId).sendMessage(
+                Utils.getMissingChunksPositions(clientFile, TCPServiceManager.MTU),
+                Utils.getSenderAddress(lastChunkReceived)
+            );
+        }
     }
-
-    
 }
