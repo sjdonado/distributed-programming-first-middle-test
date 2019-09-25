@@ -102,7 +102,15 @@ public class UDPReceptor implements UDPManagerCallerInterface {
                         position
                     ));
 
-
+                    if (Utils.createFileByClientSocketId(clientFile.getPath(),clientFile.getChunks())) {
+                        receptors.get(receptorId).sendMessage((clientSocketId + "|" + 100).getBytes(),null);
+                        clientFiles.remove(clientFile);
+                    }else{
+                         ArrayList<Integer> chunksPositions = Utils.getChunksPositions(clientFile.getChunks());
+                         ArrayList<Integer> missingChunks = Utils.checkMissingChunks(chunksPositions);
+                         
+                         
+                    }
                     
                 } else {
                     Chunk tempchunk = Utils.createChunk(headlessChunk, position);
