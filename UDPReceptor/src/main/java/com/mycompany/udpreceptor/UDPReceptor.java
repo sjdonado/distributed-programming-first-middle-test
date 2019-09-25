@@ -26,6 +26,7 @@ public class UDPReceptor implements UDPManagerCallerInterface {
     private final int NUMBER_OF_RECEPTORS = 1;
     private final ArrayList<UDPManager> receptors = new ArrayList<>();
     private final ArrayList<ClientFile> clientFiles = new ArrayList<>();
+    private byte[] lastReceivedChunk;
     
     public UDPReceptor() {
         initializeReceptors();
@@ -55,10 +56,11 @@ public class UDPReceptor implements UDPManagerCallerInterface {
     public void dataReceived(int receptorId, String ipAdress,
             int sourcePort, byte[] data) {
         try {
+            lastReceivedChunk = data;
             ClientFile clientFile;
             int clientSocketId = Utils.getClientSocketIdFromHeader(data);
             int position = Utils.getPositionFromHeader(data);
-            boolean finalChunk = Utils.getUnicastBitFromHeader(data);
+            boolean UnicastBit = Utils.getUnicastBitFromHeader(data);
 
             byte[] headlessChunk = Arrays.copyOfRange(data, 5, data.length);
 //            Logger.getLogger(UDPReceptor.class.getName()).log(
@@ -84,7 +86,7 @@ public class UDPReceptor implements UDPManagerCallerInterface {
                 );
             } else {
                 int progress = (int) (((double) (clientFile.getChunks().size()) / (clientFile.getSize() / TCPServiceManager.MTU - 5)) * 100);
-                if (finalChunk) {
+                if (UnicastBit) {
                     
                     byte [] finalHeadlessChunk = headlessChunk;
                     if (clientFile.getSize() % TCPServiceManager.MTU - 5 > 0) {
@@ -100,15 +102,7 @@ public class UDPReceptor implements UDPManagerCallerInterface {
                         position
                     ));
 
-                    if (Utils.createFileByClientSocketId(clientFile.getPath(),clientFile.getChunks())) {
-                        receptors.get(receptorId).sendMessage((clientSocketId + "|" + 100).getBytes(),null);
-                        clientFiles.remove(clientFile);
-                    }else{
-                         ArrayList<Integer> chunksPositions = Utils.getChunksPositions(clientFile.getChunks());
-                         ArrayList<Integer> missingChunks = Utils.checkMissingChunks(chunksPositions);
-                         
-                         
-                    }
+
                     
                 } else {
                     Chunk tempchunk = Utils.createChunk(headlessChunk, position);
@@ -137,6 +131,12 @@ public class UDPReceptor implements UDPManagerCallerInterface {
     @Override
     public void sendMissingChunksPositions(int clientSocket, byte[] data, String destAddress) {
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
+
+    @Override
+    public void timeoutExpired() {
+        //throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        
     }
 
     

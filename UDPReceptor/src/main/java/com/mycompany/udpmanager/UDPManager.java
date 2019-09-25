@@ -11,6 +11,7 @@ import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.net.MulticastSocket;
+import java.net.SocketException;
 import org.apache.commons.lang3.StringUtils;
 
 /**
@@ -21,7 +22,7 @@ public class UDPManager extends Thread {
     private final int listeningPort = 8080;
     private final String multicastAddress = "224.0.0.2";
 
-    private MulticastSocket multicastSocket;
+    public MulticastSocket multicastSocket;
     private DatagramSocket datagramSocket;
     private UDPManagerCallerInterface caller;
     private boolean isEnabled = true;
@@ -74,31 +75,27 @@ public class UDPManager extends Thread {
                         );
                         this.caller.clientUploadFileStatus(socketClientId, progress);
                     } else {
-                        this.caller.dataReceived(
-                            this.receptorId,
-                            datagramPacket.getAddress().toString(),
-                            datagramPacket.getPort(),
-                            byteArray
-                        );
                         boolean unicast = Utils.getUnicastBitFromHeader(byteArray);
-                        if(unicast){
+                        if (unicast) {
                             this.caller.sendMissingChunksPositions(Utils.getClientSocketIdFromHeader(byteArray), byteArray, null);
-                        }else{
-                            
+                        } else {
                             this.caller.dataReceived(
-                            this.receptorId,
-                            datagramPacket.getAddress().toString(),
-                            datagramPacket.getPort(),
-                            byteArray
-                        );
-                            
+                                this.receptorId,
+                                datagramPacket.getAddress().toString(),
+                                datagramPacket.getPort(),
+                                byteArray
+                            );
                         }
                         
                     }
                     datagramPacket.setData(new byte[TCPServiceManager.MTU]);
+                    multicastSocket.setSoTimeout(2000);
                 }
             }
-        } catch(IOException error) {
+        } catch(SocketException error) {
+            //this.caller.exceptionHasBeenThrown(error);
+//            this.caller.timeoutExpired();
+        } catch(IOException error){
             this.caller.exceptionHasBeenThrown(error);
         }
     }
