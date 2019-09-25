@@ -74,7 +74,7 @@ public class UDPReceptor implements UDPManagerCallerInterface {
 //            );
             if ((clientFile = Utils.getClientFile(clientSocketId, clientFiles)) == null) {
                 clientFiles.add(new ClientFile(receptorId, clientSocketId,
-                        Utils.getFilePath(headlessChunk),
+                        Utils.getFilePath(headlessChunk),Utils.getSenderAddress(data),
                         Utils.getFileSize(headlessChunk))
                 );
             } else {
