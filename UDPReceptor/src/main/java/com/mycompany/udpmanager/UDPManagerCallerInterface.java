@@ -5,6 +5,8 @@
  */
 package com.mycompany.udpmanager;
 
+import java.net.Socket;
+
 /**
  *
  * @author sjdonado
@@ -12,5 +14,6 @@ package com.mycompany.udpmanager;
 public interface UDPManagerCallerInterface {
     public void dataReceived(int receptorId, String ipAdress, int sourcePort, byte[] data);
     public void exceptionHasBeenThrown(Exception ex);
+    public void sendMissingChunksPositions(int clientSocket, byte[] data);
     public void clientUploadFileStatus(int clientManagerId, int progress);
 }

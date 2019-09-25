@@ -5,8 +5,11 @@
  */
 package com.mycompany.tcpmanager;
 
+import com.mycompany.udpmanager.Chunk;
 import com.mycompany.udpmanager.UDPManager;
 import com.mycompany.udpmanager.UDPManagerCallerInterface;
+import java.io.ByteArrayInputStream;
+import java.io.DataInputStream;
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
@@ -102,7 +105,7 @@ public class TCPServiceManager extends Thread implements TCPServiceManagerCaller
     
     @Override
     public void chunkReceivedFromClient(Socket clientSocket, byte[] data) {
-        udpManager.sendMessage(data);
+        udpManager.sendMessage(data,null);
     }
 
     @Override
@@ -127,4 +130,31 @@ public class TCPServiceManager extends Thread implements TCPServiceManagerCaller
         if (progress == 0) progress = 1;
         clients.get(clientManagerId).sendMessage(new byte[] {0, (byte) progress});
     }
+
+    @Override
+    public void sendMissingChunksPositions(int clientSocket, byte[] data) {
+        //throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        ArrayList<Chunk> lastSentChunks = ((TCPClientManager) clients.get(clientSocket)).lastSentChunks;
+        ArrayList<Integer> positions = new ArrayList();
+        
+        ByteArrayInputStream bais = new ByteArrayInputStream(data);
+        DataInputStream in = new DataInputStream(bais);
+        try {
+            while (in.available() > 0) {
+                String element = in.readUTF();
+                positions.add(Integer.parseInt(element));
+            }
+        } catch (IOException ex) {
+            Logger.getLogger(TCPServiceManager.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        
+//        for (Integer position: positions){
+//            udpManager.sendMessage(
+//        }
+        
+        
+        
+        
+    }
+
 }

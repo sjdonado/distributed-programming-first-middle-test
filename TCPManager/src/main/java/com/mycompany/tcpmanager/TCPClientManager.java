@@ -38,7 +38,7 @@ public class TCPClientManager extends Thread {
     private BufferedOutputStream writer;
     private final Object mutex = new Object();
     private int clientManagerId;
-    private ArrayList<Chunk> lastSentChunks;
+    public ArrayList<Chunk> lastSentChunks;
     
    
 //    TCPServiceManager connection
@@ -162,7 +162,7 @@ public class TCPClientManager extends Thread {
                             } else {
                                 byte[] offset = Utils.createHeader(
                                     position,
-                                    remainingBytes,
+                                    false,
                                     this.clientManagerId
                                 );
                                 chunk[0] = offset[0];
@@ -180,7 +180,7 @@ public class TCPClientManager extends Thread {
                                 
                                 lastSentChunks.add(Utils.createChunk(chunk, position));
                                 
-                                if (Utils.getFinalBitFromHeader(chunk)){
+                                if (Utils.getUnicastBitFromHeader(chunk)){
                                     position = 0;
                                 }
                                 Arrays.fill(chunk, (byte) 0);

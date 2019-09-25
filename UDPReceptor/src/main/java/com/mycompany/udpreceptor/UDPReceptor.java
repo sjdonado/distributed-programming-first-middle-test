@@ -6,6 +6,7 @@
 package com.mycompany.udpreceptor;
 
 import com.mycompany.tcpmanager.TCPServiceManager;
+import com.mycompany.udpmanager.Chunk;
 import com.mycompany.udpmanager.ClientFile;
 import com.mycompany.udpmanager.UDPManager;
 import com.mycompany.udpmanager.UDPManagerCallerInterface;
@@ -45,6 +46,9 @@ public class UDPReceptor implements UDPManagerCallerInterface {
                         "UDP receptor {0} running", index + 1);
         }
     }
+    
+    
+    
 
 //    UDPManager caller interface
     @Override
@@ -54,7 +58,7 @@ public class UDPReceptor implements UDPManagerCallerInterface {
             ClientFile clientFile;
             int clientSocketId = Utils.getClientSocketIdFromHeader(data);
             int position = Utils.getPositionFromHeader(data);
-            boolean finalChunk = Utils.getFinalBitFromHeader(data);
+            boolean finalChunk = Utils.getUnicastBitFromHeader(data);
 
             byte[] headlessChunk = Arrays.copyOfRange(data, 5, data.length);
 //            Logger.getLogger(UDPReceptor.class.getName()).log(
@@ -81,6 +85,7 @@ public class UDPReceptor implements UDPManagerCallerInterface {
             } else {
                 int progress = (int) (((double) (clientFile.getChunks().size()) / (clientFile.getSize() / TCPServiceManager.MTU - 5)) * 100);
                 if (finalChunk) {
+                    
                     byte [] finalHeadlessChunk = headlessChunk;
                     if (clientFile.getSize() % TCPServiceManager.MTU - 5 > 0) {
                         finalHeadlessChunk = Arrays.copyOfRange(
@@ -95,16 +100,22 @@ public class UDPReceptor implements UDPManagerCallerInterface {
                         position
                     ));
 
-                    if (Utils.createFileByClientSocketId(
-                        clientFile.getPath(),
-                        clientFile.getChunks()
-                    )) {
-                        receptors.get(receptorId).sendMessage((clientSocketId + "|" + 100).getBytes());
+                    if (Utils.createFileByClientSocketId(clientFile.getPath(),clientFile.getChunks())) {
+                        receptors.get(receptorId).sendMessage((clientSocketId + "|" + 100).getBytes(),null);
+                        clientFiles.remove(clientFile);
+                    }else{
+                         ArrayList<Integer> chunksPositions = Utils.getChunksPositions(clientFile.getChunks());
+                         ArrayList<Integer> missingChunks = Utils.checkMissingChunks(chunksPositions);
+                         
+                         
                     }
-                    clientFiles.remove(clientFile);
+                    
                 } else {
-                    clientFile.addChunk(Utils.createChunk(headlessChunk, position));
-                    receptors.get(receptorId).sendMessage((clientSocketId + "|" + progress).getBytes());
+                    Chunk tempchunk = Utils.createChunk(headlessChunk, position);
+                    if (!clientFile.getChunks().contains(tempchunk)){
+                        clientFile.addChunk(Utils.createChunk(headlessChunk, position));
+                    }
+                    receptors.get(receptorId).sendMessage((clientSocketId + "|" + progress).getBytes(),null);
                 }
             }
         } catch (IOException ex) {
@@ -121,5 +132,10 @@ public class UDPReceptor implements UDPManagerCallerInterface {
     @Override
     public void clientUploadFileStatus(int clientManagerId, int progress) {
 //        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
+
+    @Override
+    public void sendMissingChunksPositions(int clientSocket, byte[] data) {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
 }

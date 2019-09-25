@@ -6,13 +6,19 @@
 package com.mycompany.udpmanager;
 
 import com.mycompany.udpreceptor.UDPReceptor;
+import java.io.ByteArrayOutputStream;
+import java.io.DataOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.net.DatagramPacket;
+import java.net.InetAddress;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.Iterator;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
@@ -38,13 +44,13 @@ public class Utils {
         return ((0xFF & data[0]) << 24) | ((0xFF & data[1]) << 16) | ((0xFF & data[2]) << 8) | (0xFF & data[3]);
     }
     
-    public static boolean getFinalBitFromHeader(byte[] data) {
+    public static boolean getUnicastBitFromHeader(byte[] data) {
         String byte5 = Integer.toBinaryString((data[4] & 0xFF) + 0x100).substring(1);
         int fin = Integer.parseInt(byte5.substring(0, 1));
         return fin != 0;
     }
     
-    public static byte[] createHeader(int position, int remainingBytes, int socketID) {
+    public static byte[] createHeader(int position, boolean unicast, int socketID) {
         byte[] offset = new byte[5];
         
         offset[0] = (byte) (position >> 24);
@@ -59,7 +65,7 @@ public class Utils {
         while (id.length() < 7){
             id = "0" + id;
         }
-        offset[4] = (byte) Integer.parseInt((remainingBytes == 0 ? 1 : 0) + id);
+        offset[4] = (byte) Integer.parseInt((unicast == true ? 1 : 0) + id);
         return offset;
     }
     
@@ -169,22 +175,47 @@ public class Utils {
 //                        .stream()
 //                        .map(v -> v.getPosition())
 //                        .collect(Collectors.toList()));
-        try {
-            FileInputStream input;
-            FileOutputStream output;
-            output = new FileOutputStream(filePath, false);
-            for (int index = 0; index < fileChunks.size(); index++) {
-                input = new FileInputStream(fileChunks.get(index).getFilePath());
-                IOUtils.copy(input, output);
-                IOUtils.closeQuietly(input);
+        if (missingChunks.isEmpty()){
+            
+            try {
+                FileInputStream input;
+                FileOutputStream output;
+                output = new FileOutputStream(filePath, false);
+                for (int index = 0; index < fileChunks.size(); index++) {
+                    input = new FileInputStream(fileChunks.get(index).getFilePath());
+                    IOUtils.copy(input, output);
+                    IOUtils.closeQuietly(input);
+                }
+                IOUtils.closeQuietly(output);
+                Logger.getLogger(UDPReceptor.class.getName()).log(Level.INFO,
+                    "FINAL file created => {0}", filePath);
+                return true;
+            } catch (IOException ex) {
+                Logger.getLogger(Utils.class.getName()).log(Level.SEVERE, null, ex);
+                return false;
             }
-            IOUtils.closeQuietly(output);
-            Logger.getLogger(UDPReceptor.class.getName()).log(Level.INFO,
-                "FINAL file created => {0}", filePath);
-            return true;
-        } catch (IOException ex) {
-            Logger.getLogger(Utils.class.getName()).log(Level.SEVERE, null, ex);
-            return false;
+            
+            
+        }else{
+        
+        return false;
+        
         }
+        
     }
+    
+    public byte[] positionsToBytes(ArrayList<Integer> missingPositions) throws IOException{
+        
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        DataOutputStream out = new DataOutputStream(baos);
+        for (int i=0; i < missingPositions.size(); i++) {
+            out.writeUTF(Integer.toString(missingPositions.get(i)));
+        }
+        byte[] bytes = baos.toByteArray();
+        
+        return bytes;
+    }
+    
+    
+    
 }
