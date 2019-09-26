@@ -11,7 +11,10 @@ import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.net.MulticastSocket;
+import java.net.SocketException;
 import java.net.SocketTimeoutException;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import org.apache.commons.lang3.StringUtils;
 
 /**
@@ -90,6 +93,11 @@ public class UDPManager extends Thread {
                     datagramPacket.setData(new byte[TCPServiceManager.MTU]);
                 } catch (SocketTimeoutException err) {
                     System.out.println("TIME OUT ENTRY =>" + err);
+                    try {
+                        multicastSocket.setSoTimeout(0);
+                    } catch (SocketException ex) {
+                        Logger.getLogger(UDPManager.class.getName()).log(Level.SEVERE, null, ex);
+                    }
                     this.caller.timeoutExpired(this.receptorId);
                 } catch (IOException error){
                     this.caller.exceptionHasBeenThrown(error);

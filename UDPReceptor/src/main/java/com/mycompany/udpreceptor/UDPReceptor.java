@@ -135,6 +135,13 @@ public void timeoutExpired(int receptorId) {
                 Utils.getClientSocketIdFromHeader(lastMetadataReceived),
                 clientFiles)) != null) {
             
+            byte[] header = new byte[5];
+            header[0] = lastMetadataReceived[0];
+            header[1] = lastMetadataReceived[1];
+            header[2] = lastMetadataReceived[2];
+            header[3] = lastMetadataReceived[3];
+            header[4] = lastMetadataReceived[4];
+            
             receptors.get(receptorId).sendMessage(
                 Utils.getMissingChunksPositions(clientFile, TCPServiceManager.MTU),
                 Utils.getSenderAddress(lastMetadataReceived)
