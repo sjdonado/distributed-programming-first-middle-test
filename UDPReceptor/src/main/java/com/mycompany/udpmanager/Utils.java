@@ -6,8 +6,6 @@
 package com.mycompany.udpmanager;
 
 import com.mycompany.udpreceptor.UDPReceptor;
-import java.io.ByteArrayOutputStream;
-import java.io.DataOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -46,10 +44,10 @@ public class Utils {
         return fin != 0;
     }
     
-    public static byte[] createHeader(int position, boolean unicast, int socketID) {
+    public static byte[] createHeader(int position, boolean unicast, int clientSocketId) {
         byte[] offset = intToByteArr(position);
         
-        String id = Integer.toBinaryString(socketID);
+        String id = Integer.toBinaryString(clientSocketId);
         while (id.length() < 7){
             id = "0" + id;
         }
@@ -199,7 +197,7 @@ public class Utils {
     }
     
     public static byte[] getMissingChunksPositions(byte[] header, ClientFile clientFile, int MTU) {
-        ArrayList<Integer> missingChunks = checkMissingChunks(getChunksPositions(clientFile.getChunks()), clientFile.getSize()/MTU);
+        ArrayList<Integer> missingChunks = checkMissingChunks(getChunksPositions(clientFile.getChunks()), clientFile.getSize() / MTU);
         int payloadCounter = 5, index = 0;
         byte [] finalArr = new byte[MTU];
 
@@ -213,7 +211,7 @@ public class Utils {
             index++;
         }
         
-        if (payloadCounter < MTU-5)
+        if (payloadCounter < MTU- 5 )
             Arrays.fill(finalArr, payloadCounter, MTU, (byte) 0);
         
         return finalArr;

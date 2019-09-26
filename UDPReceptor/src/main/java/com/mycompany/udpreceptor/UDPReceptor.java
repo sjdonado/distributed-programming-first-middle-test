@@ -11,6 +11,8 @@ import com.mycompany.udpmanager.ClientFile;
 import com.mycompany.udpmanager.UDPManager;
 import com.mycompany.udpmanager.UDPManagerCallerInterface;
 import com.mycompany.udpmanager.Utils;
+import static com.mycompany.udpmanager.Utils.checkMissingChunks;
+import static com.mycompany.udpmanager.Utils.getChunksPositions;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -135,21 +137,19 @@ public void timeoutExpired(int receptorId) {
                 Utils.getClientSocketIdFromHeader(lastMetadataReceived),
                 clientFiles)) != null) {
             
-            byte[] header = new byte[5];
-            header[0] = lastMetadataReceived[0];
-            header[1] = lastMetadataReceived[1];
-            header[2] = lastMetadataReceived[2];
-            header[3] = lastMetadataReceived[3];
-            header[4] = lastMetadataReceived[4];
+            int position = Utils.getPositionFromHeader(lastMetadataReceived);
+            int clientSocketId = Utils.getClientSocketIdFromHeader(lastMetadataReceived);
+            byte[] header = Utils.createHeader(position, true, clientSocketId);
             
             receptors.get(receptorId).sendMessage(
                 Utils.getMissingChunksPositions(header, clientFile, TCPServiceManager.MTU),
                 Utils.getSenderAddress(lastMetadataReceived)
             );
             
+            ArrayList<Integer> missingChunks = checkMissingChunks(getChunksPositions(clientFile.getChunks()), clientFile.getSize() / TCPServiceManager.MTU);
             Logger.getLogger(
                 UDPReceptor.class.getName()).log(Level.INFO,
-                        "RETRANSMISSION  ==> {0}", Utils.getMissingChunksPositions(header, clientFile, TCPServiceManager.MTU) );
+                    "RETRANSMISSION  ==> {0}", missingChunks.toString());
             
         }
     }
