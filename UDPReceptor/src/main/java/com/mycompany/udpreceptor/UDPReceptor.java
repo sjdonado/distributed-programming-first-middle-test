@@ -77,7 +77,7 @@ public class UDPReceptor implements UDPManagerCallerInterface {
             if ((clientFile = Utils.getClientFile(clientSocketId, clientFiles)) == null) {
                 lastMetadataReceived = data;
                 clientFiles.add(new ClientFile(receptorId, clientSocketId,
-                    Utils.getFilePath(headlessChunk),Utils.getSenderAddress(data),
+                    Utils.getFilePath(headlessChunk), Utils.getSenderAddress(data),
                     Utils.getFileSize(headlessChunk))
                 );
             } else {
@@ -91,7 +91,6 @@ public class UDPReceptor implements UDPManagerCallerInterface {
                             (int) clientFile.getSize() % TCPServiceManager.MTU - 5
                         );
                     }
-
                     clientFile.addChunk(Utils.createChunk(
                         finalHeadlessChunk,
                         position
@@ -130,10 +129,10 @@ public class UDPReceptor implements UDPManagerCallerInterface {
     }
 
     @Override
-    public void timeoutExpired(int receptorId, byte[] lastChunkReceived) {
+public void timeoutExpired(int receptorId) {
         ClientFile clientFile;
         if ((clientFile = Utils.getClientFile(
-                Utils.getClientSocketIdFromHeader(lastChunkReceived),
+                Utils.getClientSocketIdFromHeader(lastMetadataReceived),
                 clientFiles)) != null) {
             
             receptors.get(receptorId).sendMessage(

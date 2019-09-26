@@ -170,17 +170,10 @@ public class TCPServiceManager extends Thread implements TCPServiceManagerCaller
                 }
             }
         }
-        
-        
-        
-        
     }
 
     @Override
-    public void timeoutExpired(int receptorId, byte[] lastChunkReceived) {
+    public void timeoutExpired(int receptorId) {
         //throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
-
-    
-
 }

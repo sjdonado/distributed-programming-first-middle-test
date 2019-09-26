@@ -27,8 +27,6 @@ public class UDPManager extends Thread {
     private UDPManagerCallerInterface caller;
     private boolean isEnabled = true;
     private int receptorId;
-    private byte[] lastChunkReceived;
-    private byte[] lastMetadataReceived;
 
     public UDPManager(int receptorId, UDPManagerCallerInterface caller) {
         this.receptorId = receptorId;
@@ -59,7 +57,6 @@ public class UDPManager extends Thread {
             while (this.isEnabled) {
                 try {
                     multicastSocket.receive(datagramPacket);
-                    //multicastSocket.setSoTimeout(2000);
                     byte[] byteArray = datagramPacket.getData();
                     String parsedData = new String(byteArray)
                             .replace("\0", "");
@@ -77,6 +74,7 @@ public class UDPManager extends Thread {
                         this.caller.clientUploadFileStatus(socketClientId, progress);
                     } else {
                         boolean unicast = Utils.getUnicastBitFromHeader(byteArray);
+                        System.out.println("UDPManager header type => " + unicast + " RECEPTOR ADDRESS => " + datagramPacket.getAddress().toString());
                         if (unicast) {
                             this.caller.sendMissingChunksPositions(Utils.getClientSocketIdFromHeader(byteArray), byteArray, null);
                         } else {
@@ -86,14 +84,13 @@ public class UDPManager extends Thread {
                                 datagramPacket.getPort(),
                                 byteArray
                             );
+                            multicastSocket.setSoTimeout(2000);
                         }
-                        lastChunkReceived = byteArray;
-                        multicastSocket.setSoTimeout(2000);
                     }
                     datagramPacket.setData(new byte[TCPServiceManager.MTU]);
                 } catch (SocketTimeoutException err) {
                     System.out.println("TIME OUT ENTRY =>" + err);
-                    this.caller.timeoutExpired(this.receptorId, lastChunkReceived);
+                    this.caller.timeoutExpired(this.receptorId);
                 } catch (IOException error){
                     this.caller.exceptionHasBeenThrown(error);
                 }
