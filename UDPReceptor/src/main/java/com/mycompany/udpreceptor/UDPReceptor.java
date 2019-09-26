@@ -143,13 +143,13 @@ public void timeoutExpired(int receptorId) {
             header[4] = lastMetadataReceived[4];
             
             receptors.get(receptorId).sendMessage(
-                Utils.getMissingChunksPositions(clientFile, TCPServiceManager.MTU),
+                Utils.getMissingChunksPositions(header, clientFile, TCPServiceManager.MTU),
                 Utils.getSenderAddress(lastMetadataReceived)
             );
             
             Logger.getLogger(
                 UDPReceptor.class.getName()).log(Level.INFO,
-                        "RETRANSMISSION  ==> {0}", Utils.getMissingChunksPositions(clientFile, TCPServiceManager.MTU) );
+                        "RETRANSMISSION  ==> {0}", Utils.getMissingChunksPositions(header, clientFile, TCPServiceManager.MTU) );
             
         }
     }
