@@ -41,8 +41,11 @@ public class Utils {
     
     public static boolean getUnicastBitFromHeader(byte[] data) {
         String byte5 = Integer.toBinaryString((data[4] & 0xFF) + 0x100).substring(1);
-        int fin = Integer.parseInt(byte5.substring(0, 1));
-        return fin != 0;
+        Logger.getLogger(Utils.class.getName()).log(
+            Level.INFO,
+            "getUnicastBitFromHeader => {0}", byte5
+        );
+        return Integer.parseInt(byte5.substring(0, 1)) != 0;
     }
     
     public static byte[] createHeader(int position, boolean unicast, int clientSocketId) {

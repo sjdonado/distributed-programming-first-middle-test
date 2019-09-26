@@ -61,34 +61,34 @@ public class UDPManager extends Thread {
                 try {
                     multicastSocket.receive(datagramPacket);
                     byte[] byteArray = datagramPacket.getData();
-                    String parsedData = new String(byteArray)
-                            .replace("\0", "");
-                    
-                    if (parsedData.length() <= 6
-                        && parsedData.contains("|")
-                        && StringUtils.isNumeric(parsedData.substring(0, parsedData.indexOf("|")))
-                    ) {
-                        int socketClientId = Integer.parseInt(
-                            parsedData.substring(0, parsedData.indexOf("|"))
-                        );
-                        int progress = Integer.parseInt(
-                            parsedData.substring(parsedData.indexOf("|") + 1)
-                        );
-                        this.caller.clientUploadFileStatus(socketClientId, progress);
+//                    String parsedData = new String(byteArray)
+//                            .replace("\0", "");
+//                    
+//                    if (parsedData.length() <= 6
+//                        && parsedData.contains("|")
+//                        && StringUtils.isNumeric(parsedData.substring(0, parsedData.indexOf("|")))
+//                    ) {
+//                        int socketClientId = Integer.parseInt(
+//                            parsedData.substring(0, parsedData.indexOf("|"))
+//                        );
+//                        int progress = Integer.parseInt(
+//                            parsedData.substring(parsedData.indexOf("|") + 1)
+//                        );
+//                        this.caller.clientUploadFileStatus(socketClientId, progress);
+//                    } else {
+//                    }
+                    boolean unicast = Utils.getUnicastBitFromHeader(byteArray);
+                    System.out.println("UDPManager header unicast => " + unicast + " RECEPTOR ADDRESS => " + datagramPacket.getAddress().toString());
+                    if (unicast) {
+                        this.caller.sendMissingChunksPositions(Utils.getClientSocketIdFromHeader(byteArray), byteArray, null);
                     } else {
-                        boolean unicast = Utils.getUnicastBitFromHeader(byteArray);
-                        System.out.println("UDPManager header unicast => " + unicast + " RECEPTOR ADDRESS => " + datagramPacket.getAddress().toString());
-                        if (unicast) {
-                            this.caller.sendMissingChunksPositions(Utils.getClientSocketIdFromHeader(byteArray), byteArray, null);
-                        } else {
-                            this.caller.dataReceived(
-                                this.receptorId,
-                                datagramPacket.getAddress().toString(),
-                                datagramPacket.getPort(),
-                                byteArray
-                            );
-                            multicastSocket.setSoTimeout(500);
-                        }
+                        this.caller.dataReceived(
+                            this.receptorId,
+                            datagramPacket.getAddress().toString(),
+                            datagramPacket.getPort(),
+                            byteArray
+                        );
+                        multicastSocket.setSoTimeout(500);
                     }
                     datagramPacket.setData(new byte[TCPServiceManager.MTU]);
                 } catch (SocketTimeoutException err) {

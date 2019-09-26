@@ -153,6 +153,8 @@ public class TCPServiceManager extends Thread implements TCPServiceManagerCaller
             Logger.getLogger(TCPServiceManager.class.getName()).log(Level.SEVERE, null, ex);
         }
         
+        Logger.getLogger(TCPClientManager.class.getName())
+            .log(Level.INFO, "GATEWAY sendMissingChunksPositions => {0}", positions);
         
         for (Chunk chunk: lastSentChunks){
             for(Integer position: positions){
@@ -161,6 +163,8 @@ public class TCPServiceManager extends Thread implements TCPServiceManagerCaller
                     try {
                         BufferedInputStream chunkStream = new BufferedInputStream(new FileInputStream(tempFileChunk));
                         byte[] chunkToBeRetransmitted = IOUtils.toByteArray(chunkStream);
+                        Logger.getLogger(TCPClientManager.class.getName())
+                            .log(Level.INFO, "SEND AGAIN CHUNK position => {0} chunk => {1}", new Object[]{position, chunkToBeRetransmitted});
                         udpManager.sendMessage(chunkToBeRetransmitted, destAddress);
                     } catch (FileNotFoundException ex) {
                         Logger.getLogger(TCPServiceManager.class.getName()).log(Level.SEVERE, null, ex);

@@ -83,6 +83,10 @@ public class UDPReceptor implements UDPManagerCallerInterface {
             } else {
                 int progress = (int) (((double) (clientFile.getChunks().size()) / (clientFile.getSize() / TCPServiceManager.MTU - 5)) * 100);
                 ArrayList<Integer> missingChunks = Utils.getMissingChunks(clientFile.getChunks(), Utils.getTotalChunks(clientFile, TCPServiceManager.MTU));
+                
+                Logger.getLogger(UDPReceptor.class.getName()).log(Level.INFO,
+                    "UDPReceptor  progress => {0} missingChunks => {1}", new Object[]{progress, missingChunks.isEmpty()});
+                
                 if (missingChunks.isEmpty() && !clientFile.getChunks().isEmpty()) {
                     byte [] finalHeadlessChunk = headlessChunk;
                     if (clientFile.getSize() % TCPServiceManager.MTU - 5 > 0) {
@@ -97,7 +101,7 @@ public class UDPReceptor implements UDPManagerCallerInterface {
                         position
                     ));
                     if (Utils.createFileByClientSocketId(clientFile.getPath(), clientFile.getChunks(),clientFile.getSize() / TCPServiceManager.MTU)) {
-                        receptors.get(receptorId).sendMessage((clientSocketId + "|" + 100).getBytes(),null);
+//                        receptors.get(receptorId).sendMessage((clientSocketId + "|" + 100).getBytes(),null);
                         clientFiles.remove(clientFile);
                     }
                 } else {
@@ -105,7 +109,7 @@ public class UDPReceptor implements UDPManagerCallerInterface {
                     if (!clientFile.getChunks().contains(tempchunk)){
                         clientFile.addChunk(Utils.createChunk(headlessChunk, position));
                     }
-                    receptors.get(receptorId).sendMessage((clientSocketId + "|" + progress).getBytes(),null);
+//                    receptors.get(receptorId).sendMessage((clientSocketId + "|" + progress).getBytes(),null);
                 }
             }
         } catch (IOException ex) {
@@ -140,15 +144,15 @@ public void timeoutExpired(int receptorId) {
             int clientSocketId = Utils.getClientSocketIdFromHeader(lastMetadataReceived);
             byte[] header = Utils.createHeader(position, true, clientSocketId);
             
+            ArrayList<Integer> missingChunks = Utils.getMissingChunks(clientFile.getChunks(), Utils.getTotalChunks(clientFile, TCPServiceManager.MTU));
+            Logger.getLogger(
+                UDPReceptor.class.getName()).log(Level.INFO,
+                    "RETRANSMISSION  lastMetadataReceived => {0} missingChunks => {1}", new Object[]{lastMetadataReceived, missingChunks.toString()});
+            
             receptors.get(receptorId).sendMessage(
                 Utils.getMissingChunksPositions(header, clientFile, TCPServiceManager.MTU),
                 Utils.getSenderAddress(lastMetadataReceived)
             );
-            
-            ArrayList<Integer> missingChunks = Utils.getMissingChunks(clientFile.getChunks(), Utils.getTotalChunks(clientFile, TCPServiceManager.MTU));
-            Logger.getLogger(
-                UDPReceptor.class.getName()).log(Level.INFO,
-                    "RETRANSMISSION  ==> {0}", missingChunks.toString());
             
         }
     }

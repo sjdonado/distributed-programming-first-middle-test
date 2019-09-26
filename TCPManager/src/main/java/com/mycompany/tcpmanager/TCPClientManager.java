@@ -147,12 +147,12 @@ public class TCPClientManager extends Thread {
                                     );
                                     position = 0;
                                 }
-                                if ((chunk[5] &255) == 0 && (chunk[6] &255) > 0) {
-                                    this.caller.messageReceivedFromClient(
-                                        clientSocket,
-                                        (chunk[6] &255) + "%"
-                                    );
-                                }
+//                                if ((chunk[5] &255) == 0 && (chunk[6] &255) > 0) {
+//                                    this.caller.messageReceivedFromClient(
+//                                        clientSocket,
+//                                        (chunk[6] &255) + "%"
+//                                    );
+//                                }
                             } else {
                                 byte[] offset = Utils.createHeader(
                                     position,
