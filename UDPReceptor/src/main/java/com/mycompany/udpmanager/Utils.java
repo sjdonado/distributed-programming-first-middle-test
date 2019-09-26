@@ -13,6 +13,7 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.logging.Level;
@@ -197,10 +198,13 @@ public class Utils {
         }
     }
     
-    public static byte[] getMissingChunksPositions(ClientFile clientFile, int MTU) {
+    public static byte[] getMissingChunksPositions(byte[] header, ClientFile clientFile, int MTU) {
         ArrayList<Integer> missingChunks = checkMissingChunks(getChunksPositions(clientFile.getChunks()), clientFile.getSize()/MTU);
-        int payloadCounter = 0, index = 0;
-        byte [] finalArr = new byte[MTU - 5];
+        int payloadCounter = 5, index = 0;
+        byte [] finalArr = new byte[MTU];
+
+        System.arraycopy(header, 0, finalArr, 0, 4);
+
         while (index < missingChunks.size()) {
             if (payloadCounter >= MTU - 5) break;
             byte[] parsedInt = intToByteArr(missingChunks.get(index));
@@ -208,6 +212,9 @@ public class Utils {
             payloadCounter += 5;
             index++;
         }
+        
+        if (payloadCounter < MTU-5)
+            Arrays.fill(finalArr, payloadCounter, MTU, (byte) 0);
         
         return finalArr;
     }
