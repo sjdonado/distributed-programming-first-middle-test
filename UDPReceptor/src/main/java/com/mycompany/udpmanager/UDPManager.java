@@ -77,7 +77,7 @@ public class UDPManager extends Thread {
                         this.caller.clientUploadFileStatus(socketClientId, progress);
                     } else {
                         boolean unicast = Utils.getUnicastBitFromHeader(byteArray);
-                        System.out.println("UDPManager header type => " + unicast + " RECEPTOR ADDRESS => " + datagramPacket.getAddress().toString());
+                        System.out.println("UDPManager header unicast => " + unicast + " RECEPTOR ADDRESS => " + datagramPacket.getAddress().toString());
                         if (unicast) {
                             this.caller.sendMissingChunksPositions(Utils.getClientSocketIdFromHeader(byteArray), byteArray, null);
                         } else {
@@ -87,7 +87,7 @@ public class UDPManager extends Thread {
                                 datagramPacket.getPort(),
                                 byteArray
                             );
-                            multicastSocket.setSoTimeout(2000);
+                            multicastSocket.setSoTimeout(500);
                         }
                     }
                     datagramPacket.setData(new byte[TCPServiceManager.MTU]);

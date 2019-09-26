@@ -145,6 +145,7 @@ public class TCPClientManager extends Thread {
                                         clientSocket,
                                         "Successful connection"
                                     );
+                                    position = 0;
                                 }
                                 if ((chunk[5] &255) == 0 && (chunk[6] &255) > 0) {
                                     this.caller.messageReceivedFromClient(
@@ -172,10 +173,6 @@ public class TCPClientManager extends Thread {
                                 position++;
                                 
                                 lastSentChunks.add(Utils.createChunk(chunk, position));
-                                
-                                if (Utils.getUnicastBitFromHeader(chunk)){
-                                    position = 0;
-                                }
                                 Arrays.fill(chunk, (byte) 0);
                             }
                             index = 4;

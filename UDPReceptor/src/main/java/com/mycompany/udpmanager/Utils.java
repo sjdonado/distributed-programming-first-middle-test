@@ -16,6 +16,7 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.stream.Collectors;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 
@@ -139,40 +140,44 @@ public class Utils {
     
     public static ArrayList<Integer> getChunksPositions(ArrayList<Chunk> chunks){
         ArrayList<Integer> chunksPositions = new ArrayList();
-        for (Chunk chunk: chunks){
+        for (Chunk chunk: chunks)
             chunksPositions.add(chunk.getPosition());
-        }
         return chunksPositions;
     }
     
-    public static ArrayList<Integer> checkMissingChunks(ArrayList<Integer> chunksPositions, long numberOfChunks){
+    public static ArrayList<Integer> getMissingChunks(ArrayList<Chunk> fileChunks, long numberOfChunks) {
+        ArrayList<Integer> chunksPositions = getChunksPositions(fileChunks);
         ArrayList<Integer> missingChunks = new ArrayList();
-        for (int i = 1; i <= numberOfChunks; i++){
-            if (!chunksPositions.contains(i)){
-                missingChunks.add(i);
-            }
+        for (int i = 1; i <= numberOfChunks; i++) {
+            if (!chunksPositions.contains(i)) missingChunks.add(i);
         }
         return missingChunks;
     }
     
+    public static long getTotalChunks(ClientFile clientFile, int MTU) {
+        long totalChunks = (long) (Math.ceil(clientFile.getSize() / (MTU - 5)));
+        Logger.getLogger(UDPReceptor.class.getName()).log(Level.INFO,
+            "getTotalChunks => {0}", totalChunks);
+        return totalChunks;
+    }
+    
     public static boolean createFileByClientSocketId(String filePath,
             ArrayList<Chunk> fileChunks, long numberOfChunks) {
-        
         fileChunks = organizeChunks(fileChunks);
-        ArrayList<Integer> chunksPositions = getChunksPositions(fileChunks);
-        ArrayList<Integer> missingChunks = checkMissingChunks(chunksPositions, numberOfChunks);
+        ArrayList<Integer> missingChunks = getMissingChunks(fileChunks, numberOfChunks);
         
-        for (int chunkpos: missingChunks){
+        missingChunks.forEach((chunkpos) -> {
             System.out.println("missing: " + chunkpos);
-        }
+        });
         
-        for (Chunk chunk: fileChunks){
+        for (Chunk chunk: fileChunks) {
             System.out.println("pos: " + chunk.getPosition());
         }
-//        System.out.println("fileChunks => " + fileChunks
+//        System.out.println("fileChunks pos => " + fileChunks
 //                        .stream()
 //                        .map(v -> v.getPosition())
 //                        .collect(Collectors.toList()));
+        
         if (missingChunks.isEmpty()){
             try {
                 FileInputStream input;
@@ -197,7 +202,7 @@ public class Utils {
     }
     
     public static byte[] getMissingChunksPositions(byte[] header, ClientFile clientFile, int MTU) {
-        ArrayList<Integer> missingChunks = checkMissingChunks(getChunksPositions(clientFile.getChunks()), clientFile.getSize() / MTU);
+        ArrayList<Integer> missingChunks = getMissingChunks(clientFile.getChunks(), getTotalChunks(clientFile, MTU));
         int payloadCounter = 5, index = 0;
         byte [] finalArr = new byte[MTU];
 
