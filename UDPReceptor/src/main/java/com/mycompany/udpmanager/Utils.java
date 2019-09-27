@@ -209,7 +209,7 @@ public class Utils {
     
     public static byte[] getMissingChunksPositions(byte[] header, ClientFile clientFile, int MTU) {
         ArrayList<Integer> missingChunks = getMissingChunks(clientFile.getChunks(), getTotalChunks(clientFile, MTU));
-        int payloadCounter = 5, index = 0;
+        int payloadCounter = 9, index = 0;
         byte [] finalArr = new byte[MTU];
 
         System.arraycopy(header, 0, finalArr, 0, 8);
