@@ -85,18 +85,4 @@ public class FilesResource {
         }
         return Response.status(404).build();
     }
-    
-    @POST
-    @Path("upload/{filename}")
-    public Response upload(InputStream file, @PathParam("filename") String filename) {
-        System.out.println("WEB SERVICE - UPLOAD FILE - STREAM => " + file);
-        Logger.getLogger(FilesResource.class.getName()).log(Level.INFO, null, file);
-        try {
-            ServerFiles.getInstance().syncFile(file, filename);
-            return Response.ok().build();
-        } catch (IOException ex) {
-            Logger.getLogger(FilesResource.class.getName()).log(Level.SEVERE, null, ex);
-            return Response.serverError().build();
-        }
-    }
 }

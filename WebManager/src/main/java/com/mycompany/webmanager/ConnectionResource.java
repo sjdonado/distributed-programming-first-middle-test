@@ -6,6 +6,7 @@
 package com.mycompany.webmanager;
 
 import com.google.gson.Gson;
+import java.util.ArrayList;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.UriInfo;
 import javax.ws.rs.Consumes;
@@ -53,12 +54,14 @@ public class ConnectionResource {
      */
     @POST
     @Consumes(MediaType.TEXT_PLAIN)
+    @Produces(MediaType.APPLICATION_JSON)
     public Response post(String server) {
+        Gson gson = new Gson();
         System.out.println(server);
         if (!this.cm.getServers().contains(server)) {
             this.cm.addServer(server);
         }
-        new Thread(() -> this.cm.syncWebServiceFiles(server)).start();
-        return Response.ok().build();
+        ArrayList<String> fileIndex = this.cm.fetchAllFiles(server);
+        return Response.ok(gson.toJson(fileIndex)).build();
     }
 }

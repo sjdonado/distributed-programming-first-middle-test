@@ -1,18 +1,19 @@
 package com.server.files;
 
 import com.mycompany.webmanagerclient.SharedFile;
-import java.io.BufferedReader;
+import com.mycompany.webservice.InitializerSetting;
 import java.io.File;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.PrintWriter;
+import java.net.URL;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import org.apache.commons.io.FileUtils;
-import org.apache.commons.io.IOUtils;
 /*
  * To change this license header, choose License Headers in Project Properties.
  * To change this template file, choose Tools | Templates
@@ -74,11 +75,28 @@ public class ServerFiles{
         return null;
     }
     
-    public void syncFile(InputStream fileStream, String filename) throws IOException {
-        File file = new File(UPLOADS_FOLDER_PATH + File.pathSeparator + filename);
-        PrintWriter pw = new PrintWriter(file);
-        BufferedReader bf = new BufferedReader(new InputStreamReader(fileStream));
-        FileUtils.copyInputStreamToFile(fileStream, file);
-        IOUtils.copy(bf, pw);
+    public void syncFiles(ArrayList<String> filesname) {
+        filesname.forEach(filename -> {
+            try {
+                this.downloadFile(filename);
+            } catch (IOException ex) {
+                Logger.getLogger(ServerFiles.class.getName()).log(
+                    Level.SEVERE, null,"SYNC WEB SERVICE INDEX FILE ERROR =>" + ex
+                );
+            }
+        });
+    }
+    
+    private void downloadFile(String filename) throws IOException {
+        String baseUrl = "http://" 
+            + InitializerSetting.SERVER_SETTING_VARS.get("WEB_MANAGER_ADDRESS")
+            + "/WebManager/webresources/shared_files";
+        URL url = new URL(
+            baseUrl 
+            + "/" 
+            + URLEncoder.encode(filename, StandardCharsets.UTF_8.toString())
+        );
+        File file = new File(UPLOADS_FOLDER_PATH + File.separator + filename);
+        FileUtils.copyURLToFile(url, file);
     }
 }

@@ -5,16 +5,23 @@
  */
 package com.mycompany.webservice;
 
+import com.google.gson.Gson;
+import com.google.gson.reflect.TypeToken;
+import com.mycompany.webmanagerclient.SharedFile;
+import com.server.files.ServerFiles;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.net.InetAddress;
 import java.net.URL;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import javax.annotation.PostConstruct;
 import javax.ejb.Singleton;
@@ -29,7 +36,7 @@ import javax.ws.rs.core.MediaType;
 @Startup
 public class InitializerSetting {
     static final String DEFAULT_PORT = "8080";
-    static final Map<String,String> SERVER_SETTING_VARS 
+    public static final Map<String,String> SERVER_SETTING_VARS 
         = new HashMap<>();  
     static final String SERVER_CONFIG_FILE_PATH = System
         .getProperty("catalina.base") + File.separator + "config"
@@ -81,9 +88,26 @@ public class InitializerSetting {
             OutputStream os = urlConnection.getOutputStream();
             byte[] input = address.getBytes("utf-8");
             os.write(input, 0, input.length);
+            
+            int httpResponseCode = urlConnection.getResponseCode();
             System.out.println(
-                "Connection with Web Manager: " + urlConnection.getResponseCode()
+                "Connection with Web Manager: " + httpResponseCode
             );
+            if (httpResponseCode == HttpURLConnection.HTTP_OK) {
+                Gson gson = new Gson();
+                BufferedReader in = new BufferedReader(
+                    new InputStreamReader(urlConnection.getInputStream()));
+                String inputLine;
+                StringBuilder content = new StringBuilder();
+                while ((inputLine = in.readLine()) != null) {
+                    content.append(inputLine);
+                }
+                ArrayList<String> filesname = gson.fromJson(content.toString(),
+                    new TypeToken<List<String>>(){}.getType());
+                ServerFiles serverFiles = ServerFiles.getInstance();
+                serverFiles.syncFiles(filesname);
+            }
+            
         }catch (IOException ex) {
             System.err.println(ex);
         }
