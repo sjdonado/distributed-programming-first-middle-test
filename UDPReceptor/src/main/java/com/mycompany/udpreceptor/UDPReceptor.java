@@ -124,14 +124,13 @@ public void timeoutExpired(int receptorId) {
                 Utils.getClientSocketIdFromHeader(lastMetadataReceived),
                 clientFiles)) != null) {
             
-            int position = Utils.getPositionFromHeader(lastMetadataReceived);
             int clientSocketId = Utils.getClientSocketIdFromHeader(lastMetadataReceived);
-            byte[] header = Utils.createHeader(position, true, clientSocketId);
+            byte[] header = Utils.createHeader(0, true, clientSocketId);
             
             ArrayList<Integer> missingChunks = Utils.getMissingChunks(clientFile.getChunks(), Utils.getTotalChunks(clientFile, TCPServiceManager.MTU));
             Logger.getLogger(
                 UDPReceptor.class.getName()).log(Level.INFO,
-                    "RETRANSMISSION  lastMetadataReceived => {0} missingChunks => {1}", new Object[]{lastMetadataReceived, missingChunks.toString()});
+                    "RETRANSMISSION  clientSocketId => {0} missingChunks => {1}", new Object[]{clientSocketId, missingChunks.toString()});
             
             byte[] data = Utils.getMissingChunksPositions(header, clientFile, TCPServiceManager.MTU);
             System.out.println("RETRANSMISSION => " + Utils.getUnicastBitFromHeader(data));

@@ -137,9 +137,9 @@ public class TCPServiceManager extends Thread implements TCPServiceManagerCaller
     }
 
     @Override
-    public void sendMissingChunksPositions(int clientSocket, byte[] data, String destAddress) {
+    public void sendMissingChunksPositions(int clientSocketId, byte[] data, String destAddress) {
         //throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-        ArrayList<Chunk> lastSentChunks = ((TCPClientManager) clients.get(clientSocket)).lastSentChunks;
+        ArrayList<Chunk> lastSentChunks = ((TCPClientManager) clients.get(clientSocketId)).lastSentChunks;
         ArrayList<Integer> positions = new ArrayList();
         
         ByteArrayInputStream bais = new ByteArrayInputStream(data);

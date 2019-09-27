@@ -29,6 +29,7 @@ public class Utils {
 //        return b & 0xFF;
 //    }
     public static int getClientSocketIdFromHeader(byte[] data) {
+        System.out.println("getClientSocketIdFromHeader CLIENT_SOCKET_ID=> " + byteArrToInt(new byte[]{data[5], data[6], data[7], data[8]}));
         return byteArrToInt(new byte[]{data[5], data[6], data[7], data[8]});
     }
     
@@ -57,11 +58,6 @@ public class Utils {
         offset[6] = clientIdBytes[1];
         offset[7] = clientIdBytes[2];
         offset[8] = clientIdBytes[3];
-        
-        System.out.println("OFFSET --------------------------------------------");
-        for (byte byteArr : offset) {
-            System.out.println("OFFSET => " + byteArr);
-        }
         
         return offset;
     }
