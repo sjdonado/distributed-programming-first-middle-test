@@ -81,7 +81,7 @@ public class UDPReceptor implements UDPManagerCallerInterface {
                     Utils.getFileSize(headlessChunk))
                 );
             } else {
-                int progress = (int) (((double) (clientFile.getChunks().size()) / (clientFile.getSize() / TCPServiceManager.MTU - 5)) * 100);
+                int progress = (int) (((double) (clientFile.getChunks().size()) / (clientFile.getSize() / TCPServiceManager.MTU - 9)) * 100);
                 ArrayList<Integer> missingChunks = Utils.getMissingChunks(clientFile.getChunks(), Utils.getTotalChunks(clientFile, TCPServiceManager.MTU));
                 
                 Logger.getLogger(UDPReceptor.class.getName()).log(Level.INFO,
@@ -89,11 +89,11 @@ public class UDPReceptor implements UDPManagerCallerInterface {
                 
                 if (missingChunks.isEmpty() && !clientFile.getChunks().isEmpty()) {
                     byte [] finalHeadlessChunk = headlessChunk;
-                    if (clientFile.getSize() % TCPServiceManager.MTU - 5 > 0) {
+                    if (clientFile.getSize() % TCPServiceManager.MTU - 9 > 0) {
                         finalHeadlessChunk = Arrays.copyOfRange(
                             headlessChunk,
                             0,
-                            (int) clientFile.getSize() % TCPServiceManager.MTU - 5
+                            (int) clientFile.getSize() % TCPServiceManager.MTU - 9
                         );
                     }
                     clientFile.addChunk(Utils.createChunk(

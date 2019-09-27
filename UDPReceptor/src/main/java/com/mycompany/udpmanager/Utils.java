@@ -29,33 +29,35 @@ public class Utils {
 //        return b & 0xFF;
 //    }
     public static int getClientSocketIdFromHeader(byte[] data) {
-        String byte5 = Integer.toBinaryString((data[4] & 0xFF) + 0x100).substring(1);
-        
-        int clientSocketId = Integer.parseInt(byte5.substring(1, 8));
-        return clientSocketId;
+        return byteArrToInt(new byte[]{data[5], data[6], data[7], data[8]});
     }
     
     public static int getPositionFromHeader(byte[] data) {
-        return byteArrToInt(data);
+        return byteArrToInt(new byte[]{data[0], data[1], data[2], data[3]});
     }
     
     public static boolean getUnicastBitFromHeader(byte[] data) {
-        String byte5 = Integer.toBinaryString((data[4] & 0xFF) + 0x100).substring(1);
-        Logger.getLogger(Utils.class.getName()).log(
-            Level.INFO,
-            "getUnicastBitFromHeader => {0}", byte5
-        );
-        return Integer.parseInt(byte5.substring(0, 1)) != 0;
+        return data[4] == 1;
     }
     
     public static byte[] createHeader(int position, boolean unicast, int clientSocketId) {
-        byte[] offset = intToByteArr(position);
+        byte[] offset = new byte[9];
+        byte[] positionBytes = intToByteArr(position);
         
-        String id = Integer.toBinaryString(clientSocketId);
-        while (id.length() < 7){
-            id = "0" + id;
-        }
-        offset[4] = (byte) Integer.parseInt((unicast == true ? 1 : 0) + id);
+        offset[0] = positionBytes[0];
+        offset[1] = positionBytes[1];
+        offset[2] = positionBytes[2];
+        offset[3] = positionBytes[3];
+        
+        offset[4] = (byte) (unicast == true ? 1 : 0);
+        
+        byte[] clientIdBytes = intToByteArr(clientSocketId);
+        
+        offset[5] = clientIdBytes[0];
+        offset[6] = clientIdBytes[1];
+        offset[7] = clientIdBytes[2];
+        offset[8] = clientIdBytes[3];
+        
         return offset;
     }
     
@@ -158,7 +160,7 @@ public class Utils {
     }
     
     public static long getTotalChunks(ClientFile clientFile, int MTU) {
-        long totalChunks = (long) (Math.ceil(clientFile.getSize() / (MTU - 5)));
+        long totalChunks = (long) (Math.ceil(clientFile.getSize() / (MTU - 9)));
         Logger.getLogger(UDPReceptor.class.getName()).log(Level.INFO,
             "getTotalChunks => {0}", totalChunks);
         return totalChunks;
@@ -212,14 +214,14 @@ public class Utils {
         System.arraycopy(header, 0, finalArr, 0, 4);
 
         while (index < missingChunks.size()) {
-            if (payloadCounter >= MTU - 5) break;
+            if (payloadCounter >= MTU - 9) break;
             byte[] parsedInt = intToByteArr(missingChunks.get(index));
             System.arraycopy(parsedInt, 0, finalArr, payloadCounter, 4);
             payloadCounter += 5;
             index++;
         }
         
-        if (payloadCounter < MTU- 5 )
+        if (payloadCounter < MTU- 9)
             Arrays.fill(finalArr, payloadCounter, MTU, (byte) 0);
         
         return finalArr;

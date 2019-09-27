@@ -127,7 +127,7 @@ public class TCPClientManager extends Thread {
                 if (initializeStreams()) {
                     sendMessage(new byte[] {0, 0});
                     byte[] chunk = new byte[TCPServiceManager.MTU];
-                    int data, index = 5, remainingBytes;
+                    int data, index = 9, remainingBytes;
                     int position = 0;
                     lastSentChunks = new ArrayList();
                     while ((data = this.reader.read()) != -1) {
@@ -139,8 +139,8 @@ public class TCPClientManager extends Thread {
                         if (index == TCPServiceManager.MTU - 1 || remainingBytes == 0) {
 //                            Logger.getLogger(TCPClientManager.class.getName())
 //                                    .log(Level.INFO, "INDEX: {0} CHUNK - 4:{1} 5:{2}", new Object[]{index, (chunk[4] &255), (chunk[5] &255)});
-                            if (index == 6) {
-                                if ((chunk[5] &255) == 0 && (chunk[6] &255) == 0) {
+                            if (index == 10) {
+                                if ((chunk[9] &255) == 0 && (chunk[10] &255) == 0) {
                                     this.caller.messageReceivedFromClient(
                                         clientSocket,
                                         "Successful connection"
@@ -164,6 +164,11 @@ public class TCPClientManager extends Thread {
                                 chunk[2] = offset[2];
                                 chunk[3] = offset[3];
                                 chunk[4] = offset[4];
+                                chunk[5] = offset[5];
+                                chunk[6] = offset[6];
+                                chunk[7] = offset[7];
+                                chunk[8] = offset[8];
+
 //                                Logger.getLogger(
 //                                    TCPClientManager.class.getName()).log(Level.INFO,
 //                                        "CHUNK ReceivedFromClient {0} {1}",
@@ -175,7 +180,7 @@ public class TCPClientManager extends Thread {
                                 lastSentChunks.add(Utils.createChunk(chunk, position));
                                 Arrays.fill(chunk, (byte) 0);
                             }
-                            index = 4;
+                            index = 8;
                         }
                         index += 1;
                     }
@@ -226,8 +231,8 @@ public class TCPClientManager extends Thread {
             if (this.clientSocket.isConnected()) {
                 
                 String metadata = file.getName() + "/*/" + file.length() + "/&/" + InetAddress.getLocalHost().toString();
-                if (metadata.length() < TCPServiceManager.MTU - 5) {
-                    char[] chars = new char[TCPServiceManager.MTU - 5 - metadata.length()];
+                if (metadata.length() < TCPServiceManager.MTU - 9) {
+                    char[] chars = new char[TCPServiceManager.MTU - 9 - metadata.length()];
                     Arrays.fill(chars, '\0');
                     metadata += new String(chars);
                 }

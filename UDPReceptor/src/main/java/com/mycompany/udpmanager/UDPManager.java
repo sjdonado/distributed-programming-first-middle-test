@@ -30,15 +30,18 @@ public class UDPManager extends Thread {
     private UDPManagerCallerInterface caller;
     private boolean isEnabled = true;
     private int receptorId;
-
+    private boolean sender;
+    
     public UDPManager(int receptorId, UDPManagerCallerInterface caller) {
         this.receptorId = receptorId;
+        this.sender = false;
         this.caller = caller;
         this.start();
     }
     
     public UDPManager(UDPManagerCallerInterface caller) {
         this.caller = caller;
+        this.sender = true;
         this.start();
     }
 
@@ -78,17 +81,20 @@ public class UDPManager extends Thread {
 //                    } else {
 //                    }
                     boolean unicast = Utils.getUnicastBitFromHeader(byteArray);
-                    System.out.println("UDPManager header unicast => " + unicast + " RECEPTOR ADDRESS => " + datagramPacket.getAddress().toString());
-                    if (unicast) {
-                        this.caller.sendMissingChunksPositions(Utils.getClientSocketIdFromHeader(byteArray), byteArray, null);
+                    if (sender) {
+                        if (unicast) {
+                            this.caller.sendMissingChunksPositions(Utils.getClientSocketIdFromHeader(byteArray), byteArray, null);
+                        }
                     } else {
-                        this.caller.dataReceived(
-                            this.receptorId,
-                            datagramPacket.getAddress().toString(),
-                            datagramPacket.getPort(),
-                            byteArray
-                        );
-                        multicastSocket.setSoTimeout(500);
+                        if (!unicast) {
+                            this.caller.dataReceived(
+                                this.receptorId,
+                                datagramPacket.getAddress().toString(),
+                                datagramPacket.getPort(),
+                                byteArray
+                            );
+                            multicastSocket.setSoTimeout(500);  
+                        }
                     }
                     datagramPacket.setData(new byte[TCPServiceManager.MTU]);
                 } catch (SocketTimeoutException err) {
