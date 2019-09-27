@@ -10,6 +10,7 @@ import com.mycompany.webmanagerclient.SharedFile;
 import com.server.files.ServerFiles;
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.UnsupportedEncodingException;
 import java.net.HttpURLConnection;
@@ -18,10 +19,13 @@ import java.net.URL;
 import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.UriInfo;
 import javax.ws.rs.Produces;
 import javax.ws.rs.GET;
+import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.core.MediaType;
@@ -80,5 +84,19 @@ public class FilesResource {
             System.err.println(e);
         }
         return Response.status(404).build();
+    }
+    
+    @POST
+    @Path("upload/{filename}")
+    public Response upload(InputStream file, @PathParam("filename") String filename) {
+        System.out.println("WEB SERVICE - UPLOAD FILE - STREAM => " + file);
+        Logger.getLogger(FilesResource.class.getName()).log(Level.INFO, null, file);
+        try {
+            ServerFiles.getInstance().syncFile(file, filename);
+            return Response.ok().build();
+        } catch (IOException ex) {
+            Logger.getLogger(FilesResource.class.getName()).log(Level.SEVERE, null, ex);
+            return Response.serverError().build();
+        }
     }
 }

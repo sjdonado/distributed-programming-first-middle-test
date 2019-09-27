@@ -1,12 +1,18 @@
 package com.server.files;
 
 import com.mycompany.webmanagerclient.SharedFile;
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.PrintWriter;
 import java.nio.file.Files;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.ArrayList;
 import java.util.Date;
+import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.IOUtils;
 /*
  * To change this license header, choose License Headers in Project Properties.
  * To change this template file, choose Tools | Templates
@@ -66,5 +72,13 @@ public class ServerFiles{
             System.err.println(e);
         }
         return null;
+    }
+    
+    public void syncFile(InputStream fileStream, String filename) throws IOException {
+        File file = new File(UPLOADS_FOLDER_PATH + File.pathSeparator + filename);
+        PrintWriter pw = new PrintWriter(file);
+        BufferedReader bf = new BufferedReader(new InputStreamReader(fileStream));
+        FileUtils.copyInputStreamToFile(fileStream, file);
+        IOUtils.copy(bf, pw);
     }
 }

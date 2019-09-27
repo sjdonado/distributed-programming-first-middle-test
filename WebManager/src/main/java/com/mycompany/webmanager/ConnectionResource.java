@@ -58,6 +58,7 @@ public class ConnectionResource {
         if (!this.cm.getServers().contains(server)) {
             this.cm.addServer(server);
         }
+        new Thread(() -> this.cm.syncWebServiceFiles(server)).start();
         return Response.ok().build();
     }
 }
