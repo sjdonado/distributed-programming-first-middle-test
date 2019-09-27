@@ -52,28 +52,12 @@ public class UDPReceptor implements UDPManagerCallerInterface {
     public void dataReceived(int receptorId, String ipAdress,
             int sourcePort, byte[] data) {
         try {
-//            lastReceivedChunk = data;
             ClientFile clientFile;
             int clientSocketId = Utils.getClientSocketIdFromHeader(data);
             int position = Utils.getPositionFromHeader(data);
 
-            byte[] headlessChunk = Arrays.copyOfRange(data, 5, data.length);
-//            Logger.getLogger(UDPReceptor.class.getName()).log(
-//                Level.INFO,
-//                "CHUNK - ReceptorId: {0} - |{1}|{2}|{3}|{4}|{5} - {6}:{7} \n"
-//                        + "DATA: {8} \n",
-//                new Object[] {
-//                    receptorId,
-//                    String.format("HEAD[0] => %8s", Integer.toBinaryString(data[0] & 0xFF)).replace(' ', '0'),
-//                    String.format("HEAD[1] => %8s", Integer.toBinaryString(data[1] & 0xFF)).replace(' ', '0'),
-//                    String.format("HEAD[2] => %8s", Integer.toBinaryString(data[2] & 0xFF)).replace(' ', '0'),
-//                    String.format("HEAD[3] => %8s", Integer.toBinaryString(data[3] & 0xFF)).replace(' ', '0'),
-//                    String.format("HEAD[4] => %8s", Integer.toBinaryString(data[4] & 0xFF)).replace(' ', '0'),
-//                    ipAdress,
-//                    sourcePort,
-//                    new String(headlessChunk),
-//                }
-//            );
+            byte[] headlessChunk = Arrays.copyOfRange(data, 9, data.length);
+
             if ((clientFile = Utils.getClientFile(clientSocketId, clientFiles)) == null) {
                 lastMetadataReceived = data;
                 clientFiles.add(new ClientFile(receptorId, clientSocketId,
@@ -149,11 +133,12 @@ public void timeoutExpired(int receptorId) {
                 UDPReceptor.class.getName()).log(Level.INFO,
                     "RETRANSMISSION  lastMetadataReceived => {0} missingChunks => {1}", new Object[]{lastMetadataReceived, missingChunks.toString()});
             
+            byte[] data = Utils.getMissingChunksPositions(header, clientFile, TCPServiceManager.MTU);
+            System.out.println("RETRANSMISSION => " + Utils.getUnicastBitFromHeader(data));
             receptors.get(receptorId).sendMessage(
-                Utils.getMissingChunksPositions(header, clientFile, TCPServiceManager.MTU),
+                data,
                 Utils.getSenderAddress(lastMetadataReceived)
             );
-            
         }
     }
 }

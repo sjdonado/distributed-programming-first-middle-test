@@ -58,6 +58,7 @@ public class Utils {
         offset[7] = clientIdBytes[2];
         offset[8] = clientIdBytes[3];
         
+        System.out.println("OFFSET => " + offset.toString());
         return offset;
     }
     
