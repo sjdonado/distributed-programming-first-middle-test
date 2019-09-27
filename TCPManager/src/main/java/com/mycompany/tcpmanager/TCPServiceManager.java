@@ -8,6 +8,7 @@ package com.mycompany.tcpmanager;
 import com.mycompany.udpmanager.Chunk;
 import com.mycompany.udpmanager.UDPManager;
 import com.mycompany.udpmanager.UDPManagerCallerInterface;
+import com.mycompany.udpmanager.Utils;
 import java.io.BufferedInputStream;
 import java.io.ByteArrayInputStream;
 import java.io.DataInputStream;
@@ -18,8 +19,10 @@ import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.stream.Collectors;
 import org.apache.commons.io.IOUtils;
 
 /**
@@ -142,38 +145,35 @@ public class TCPServiceManager extends Thread implements TCPServiceManagerCaller
         ArrayList<Chunk> lastSentChunks = ((TCPClientManager) clients.get(clientSocketId)).lastSentChunks;
         ArrayList<Integer> positions = new ArrayList();
         
-        ByteArrayInputStream bais = new ByteArrayInputStream(data);
-        DataInputStream in = new DataInputStream(bais);
-        try {
-            while (in.available() > 0) {
-                String element = in.readUTF();
-                positions.add(Integer.parseInt(element));
-            }
-        } catch (IOException ex) {
-            Logger.getLogger(TCPServiceManager.class.getName()).log(Level.SEVERE, null, ex);
+        for (int index = 8; index < data.length - 4; index += 4) {
+            positions.add(Utils.byteArrToInt(new byte[]{data[index + 1],
+                data[index + 2], data[index + 3], data[index + 4]}));
         }
         
-        Logger.getLogger(TCPClientManager.class.getName())
-            .log(Level.INFO, "GATEWAY sendMissingChunksPositions => {0}", positions);
+        ArrayList<Integer> parsedPositions = new ArrayList<>(positions.stream().filter(i -> i > 0).distinct().collect(Collectors.toList()));
         
+        Logger.getLogger(TCPClientManager.class.getName())
+            .log(Level.INFO, "GATEWAY sendMissingChunksPositions => {0}", parsedPositions);
+        
+        byte[] chunkToBeRetransmitted = null;
         for (Chunk chunk: lastSentChunks){
-            for(Integer position: positions){
-                if (chunk.getPosition() == position){
-                    File tempFileChunk = new File(chunk.getFilePath());
-                    try {
-                        BufferedInputStream chunkStream = new BufferedInputStream(new FileInputStream(tempFileChunk));
-                        byte[] chunkToBeRetransmitted = IOUtils.toByteArray(chunkStream);
-                        Logger.getLogger(TCPClientManager.class.getName())
-                            .log(Level.INFO, "SEND AGAIN CHUNK position => {0} chunk => {1}", new Object[]{position, chunkToBeRetransmitted});
-                        udpManager.sendMessage(chunkToBeRetransmitted, destAddress);
-                    } catch (FileNotFoundException ex) {
-                        Logger.getLogger(TCPServiceManager.class.getName()).log(Level.SEVERE, null, ex);
-                    } catch (IOException ex) {
-                        Logger.getLogger(TCPServiceManager.class.getName()).log(Level.SEVERE, null, ex);
-                    }
+            if (parsedPositions.contains(chunk.getPosition())) {
+                File tempFileChunk = new File(chunk.getFilePath());
+                try {
+                    BufferedInputStream chunkStream = new BufferedInputStream(new FileInputStream(tempFileChunk));
+                    chunkToBeRetransmitted = IOUtils.toByteArray(chunkStream);
+                    Logger.getLogger(TCPClientManager.class.getName())
+                        .log(Level.INFO, "CHUNK RETRANSMISSION position => {0} chunk => {1}", new Object[]{chunk.getPosition(), chunkToBeRetransmitted});
+                    break;
+                } catch (FileNotFoundException ex) {
+                    Logger.getLogger(TCPServiceManager.class.getName()).log(Level.SEVERE, null, ex);
+                } catch (IOException ex) {
+                    Logger.getLogger(TCPServiceManager.class.getName()).log(Level.SEVERE, null, ex);
                 }
             }
         }
+        
+        if (chunkToBeRetransmitted != null) udpManager.sendMessage(chunkToBeRetransmitted, destAddress);
     }
 
     @Override

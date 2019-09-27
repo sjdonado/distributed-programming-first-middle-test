@@ -62,7 +62,7 @@ public class Utils {
         return offset;
     }
     
-    private static byte[] intToByteArr(int num) {
+    public static byte[] intToByteArr(int num) {
         byte[] parsedInt = new byte[5];
         parsedInt[0] = (byte) (num >> 24);
         parsedInt[1] = (byte) (num >> 16);
@@ -71,7 +71,7 @@ public class Utils {
         return parsedInt;
     }
     
-    private static int byteArrToInt(byte[] data) {
+    public static int byteArrToInt(byte[] data) {
         return ((0xFF & data[0]) << 24) | ((0xFF & data[1]) << 16) | ((0xFF & data[2]) << 8) | (0xFF & data[3]);
     }
     
@@ -218,7 +218,7 @@ public class Utils {
             if (payloadCounter >= MTU - 9) break;
             byte[] parsedInt = intToByteArr(missingChunks.get(index));
             System.arraycopy(parsedInt, 0, finalArr, payloadCounter, 4);
-            payloadCounter += 5;
+            payloadCounter += 6;
             index++;
         }
         
