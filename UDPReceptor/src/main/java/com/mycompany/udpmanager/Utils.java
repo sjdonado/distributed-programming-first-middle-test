@@ -58,7 +58,11 @@ public class Utils {
         offset[7] = clientIdBytes[2];
         offset[8] = clientIdBytes[3];
         
-        System.out.println("OFFSET => " + offset.toString());
+        System.out.println("OFFSET --------------------------------------------");
+        for (byte byteArr : offset) {
+            System.out.println("OFFSET => " + byteArr);
+        }
+        
         return offset;
     }
     
@@ -212,7 +216,7 @@ public class Utils {
         int payloadCounter = 5, index = 0;
         byte [] finalArr = new byte[MTU];
 
-        System.arraycopy(header, 0, finalArr, 0, 4);
+        System.arraycopy(header, 0, finalArr, 0, 8);
 
         while (index < missingChunks.size()) {
             if (payloadCounter >= MTU - 9) break;
@@ -222,7 +226,7 @@ public class Utils {
             index++;
         }
         
-        if (payloadCounter < MTU- 9)
+        if (payloadCounter < MTU - 9)
             Arrays.fill(finalArr, payloadCounter, MTU, (byte) 0);
         
         return finalArr;
