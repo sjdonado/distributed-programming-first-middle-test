@@ -370,7 +370,7 @@ public class GUI extends javax.swing.JFrame implements TCPServiceManagerCallerIn
     private void buttonSelectFileActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_buttonSelectFileActionPerformed
         int returnVal = this.fileChooser.showOpenDialog(this);
         if (returnVal == JFileChooser.APPROVE_OPTION) {
-            labelFileProgress.setText("Sending...");
+            //labelFileProgress.setText("Sending...");
             File file = fileChooser.getSelectedFile();
             if (this.tcpClientManager != null) {
                 this.tcpClientManager.sendFile(file);

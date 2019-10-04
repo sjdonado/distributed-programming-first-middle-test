@@ -8,13 +8,8 @@ package com.mycompany.udpmanager;
 import com.mycompany.tcpmanager.TCPServiceManager;
 import java.io.IOException;
 import java.net.DatagramPacket;
-import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.net.MulticastSocket;
-import java.net.SocketException;
-import java.net.SocketTimeoutException;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import org.apache.commons.lang3.StringUtils;
 
 /**
@@ -25,23 +20,19 @@ public class UDPManager extends Thread {
     private final int listeningPort = 8080;
     private final String multicastAddress = "224.0.0.2";
 
-    public MulticastSocket multicastSocket;
-    private DatagramSocket datagramSocket;
+    private MulticastSocket multicastSocket;
     private UDPManagerCallerInterface caller;
     private boolean isEnabled = true;
     private int receptorId;
-    private boolean sender;
-    
+
     public UDPManager(int receptorId, UDPManagerCallerInterface caller) {
         this.receptorId = receptorId;
-        this.sender = false;
         this.caller = caller;
         this.start();
     }
     
     public UDPManager(UDPManagerCallerInterface caller) {
         this.caller = caller;
-        this.sender = true;
         this.start();
     }
 
@@ -58,69 +49,44 @@ public class UDPManager extends Thread {
     
     @Override
     public void run() {
-        DatagramPacket datagramPacket = new DatagramPacket(new byte[TCPServiceManager.MTU], TCPServiceManager.MTU);
-        if (initializeMulticastSocket()) {
-            while (this.isEnabled) {
-                try {
+        try {
+            DatagramPacket datagramPacket = new DatagramPacket(new byte[TCPServiceManager.MTU], TCPServiceManager.MTU);
+            if (initializeMulticastSocket()) {
+                while (this.isEnabled) {
                     multicastSocket.receive(datagramPacket);
-                    byte[] byteArray = datagramPacket.getData();
-//                    String parsedData = new String(byteArray)
-//                            .replace("\0", "");
-//                    
-//                    if (parsedData.length() <= 6
-//                        && parsedData.contains("|")
-//                        && StringUtils.isNumeric(parsedData.substring(0, parsedData.indexOf("|")))
-//                    ) {
-//                        int socketClientId = Integer.parseInt(
-//                            parsedData.substring(0, parsedData.indexOf("|"))
-//                        );
-//                        int progress = Integer.parseInt(
-//                            parsedData.substring(parsedData.indexOf("|") + 1)
-//                        );
-//                        this.caller.clientUploadFileStatus(socketClientId, progress);
-//                    } else {
-//                    }
-                    boolean unicast = Utils.getUnicastBitFromHeader(byteArray);
-                    System.out.println("UNICAST => " + unicast);
-                    if (sender) {
-                        if (unicast) {
-                            this.caller.sendMissingChunksPositions(Utils.getClientSocketIdFromHeader(byteArray), byteArray, null);
-                        }
+                    String parsedData = new String(datagramPacket.getData())
+                            .replace("\0", "");
+                    if (parsedData.length() <= 6
+                        && parsedData.contains("|")
+                        && StringUtils.isNumeric(parsedData.substring(0, parsedData.indexOf("|")))
+                    ) {
+                        int socketClientId = Integer.parseInt(
+                            parsedData.substring(0, parsedData.indexOf("|"))
+                        );
+                        int progress = Integer.parseInt(
+                            parsedData.substring(parsedData.indexOf("|") + 1)
+                        );
+                        //this.caller.clientUploadFileStatus(socketClientId, progress);
                     } else {
-                        if (!unicast) {
-                            this.caller.dataReceived(
-                                this.receptorId,
-                                datagramPacket.getAddress().toString(),
-                                datagramPacket.getPort(),
-                                byteArray
-                            );
-                            multicastSocket.setSoTimeout(500);  
-                        }
+                        this.caller.dataReceived(
+                            this.receptorId,
+                            datagramPacket.getAddress().toString(),
+                            datagramPacket.getPort(),
+                            datagramPacket.getData()
+                        );
                     }
                     datagramPacket.setData(new byte[TCPServiceManager.MTU]);
-                } catch (SocketTimeoutException err) {
-                    System.out.println("TIME OUT ENTRY =>" + err);
-                    try {
-                        multicastSocket.setSoTimeout(0);
-                    } catch (SocketException ex) {
-                        Logger.getLogger(UDPManager.class.getName()).log(Level.SEVERE, null, ex);
-                    }
-                    this.caller.timeoutExpired(this.receptorId);
-                } catch (IOException error){
-                    this.caller.exceptionHasBeenThrown(error);
                 }
             }
+        } catch(IOException error) {
+            this.caller.exceptionHasBeenThrown(error);
         }
     }
     
-    public boolean sendMessage(byte[] data, String destAddress) {
+    public boolean sendMessage(byte[] data) {
         try {
             DatagramPacket datagramPacketToBeSent = new DatagramPacket(data, data.length);
-            if (destAddress == null){
-                datagramPacketToBeSent.setAddress(InetAddress.getByName(this.multicastAddress));
-            } else {
-                datagramPacketToBeSent.setAddress(InetAddress.getByName(destAddress));
-            }
+            datagramPacketToBeSent.setAddress(InetAddress.getByName(this.multicastAddress));
             datagramPacketToBeSent.setPort(this.listeningPort);
             multicastSocket.send(datagramPacketToBeSent);
             return true;

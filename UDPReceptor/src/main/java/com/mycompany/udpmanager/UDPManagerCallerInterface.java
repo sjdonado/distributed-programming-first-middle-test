@@ -12,7 +12,5 @@ package com.mycompany.udpmanager;
 public interface UDPManagerCallerInterface {
     public void dataReceived(int receptorId, String ipAdress, int sourcePort, byte[] data);
     public void exceptionHasBeenThrown(Exception ex);
-    public void sendMissingChunksPositions(int clientSocket, byte[] data, String destAddress);
-    public void timeoutExpired(int receptorId);
     public void clientUploadFileStatus(int clientManagerId, int progress);
 }

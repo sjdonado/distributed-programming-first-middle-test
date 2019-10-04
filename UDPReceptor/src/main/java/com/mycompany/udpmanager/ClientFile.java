@@ -15,16 +15,14 @@ public class ClientFile {
     private final int receptorId;
     private final int clientSocketId;
     private final String path;
-    private final String clientIp;
     private final long size;
     private final ArrayList<Chunk> chunks;
 
-    public ClientFile(int receptorId, int clientSocketId, String filePath, String clientIp,
+    public ClientFile(int receptorId, int clientSocketId, String filePath,
             long fileSize) {
         this.receptorId = receptorId;
         this.clientSocketId = clientSocketId;
         this.path = filePath;
-        this.clientIp = clientIp;
         this.size = fileSize;
         this.chunks = new ArrayList<>();
     }

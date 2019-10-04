@@ -11,7 +11,6 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.logging.Level;
@@ -29,50 +28,39 @@ public class Utils {
 //        return b & 0xFF;
 //    }
     public static int getClientSocketIdFromHeader(byte[] data) {
-        System.out.println("getClientSocketIdFromHeader CLIENT_SOCKET_ID=> " + byteArrToInt(new byte[]{data[5], data[6], data[7], data[8]}));
-        return byteArrToInt(new byte[]{data[5], data[6], data[7], data[8]});
+        String byte5 = Integer.toBinaryString((data[4] & 0xFF) + 0x100).substring(1);
+        
+        int clientSocketId = Integer.parseInt(byte5.substring(1, 8));
+        return clientSocketId;
     }
     
     public static int getPositionFromHeader(byte[] data) {
-        return byteArrToInt(new byte[]{data[0], data[1], data[2], data[3]});
-    }
-    
-    public static boolean getUnicastBitFromHeader(byte[] data) {
-        return data[4] == 1;
-    }
-    
-    public static byte[] createHeader(int position, boolean unicast, int clientSocketId) {
-        byte[] offset = new byte[9];
-        byte[] positionBytes = intToByteArr(position);
-        
-        offset[0] = positionBytes[0];
-        offset[1] = positionBytes[1];
-        offset[2] = positionBytes[2];
-        offset[3] = positionBytes[3];
-        
-        offset[4] = (byte) (unicast == true ? 1 : 0);
-        
-        byte[] clientIdBytes = intToByteArr(clientSocketId);
-        
-        offset[5] = clientIdBytes[0];
-        offset[6] = clientIdBytes[1];
-        offset[7] = clientIdBytes[2];
-        offset[8] = clientIdBytes[3];
-        
-        return offset;
-    }
-    
-    public static byte[] intToByteArr(int num) {
-        byte[] parsedInt = new byte[5];
-        parsedInt[0] = (byte) (num >> 24);
-        parsedInt[1] = (byte) (num >> 16);
-        parsedInt[2] = (byte) (num >> 8);
-        parsedInt[3] = (byte) (num);
-        return parsedInt;
-    }
-    
-    public static int byteArrToInt(byte[] data) {
         return ((0xFF & data[0]) << 24) | ((0xFF & data[1]) << 16) | ((0xFF & data[2]) << 8) | (0xFF & data[3]);
+    }
+    
+    public static boolean getFinalBitFromHeader(byte[] data) {
+        String byte5 = Integer.toBinaryString((data[4] & 0xFF) + 0x100).substring(1);
+        int fin = Integer.parseInt(byte5.substring(0, 1));
+        return fin != 0;
+    }
+    
+    public static byte[] createHeader(int position, int remainingBytes, int socketID) {
+        byte[] offset = new byte[5];
+        
+        offset[0] = (byte) (position >> 24);
+        offset[1] = (byte) (position >> 16);
+        offset[2] = (byte) (position >> 8);
+        offset[3] = (byte) (position);
+//        offset[0] = (byte) (position % 255);
+//        offset[1] = (byte) (position / 255);
+//        offset[2] = (byte) (position / 65535);
+        
+        String id = Integer.toBinaryString(socketID);
+        while (id.length() < 7){
+            id = "0" + id;
+        }
+        offset[4] = (byte) Integer.parseInt((remainingBytes == 0 ? 1 : 0) + id);
+        return offset;
     }
     
     public static String getFilePath(byte[] data) {
@@ -97,17 +85,11 @@ public class Utils {
         return dirPath + filename;
     }
     
-    public static String getSenderAddress(byte[] data){
-        String ipAddress = new String(data);
-        ipAddress = ipAddress.substring(ipAddress.indexOf("/&/")+3, ipAddress.length());
-        return ipAddress.substring(ipAddress.indexOf("/")+1,ipAddress.length());
-    }
-    
     public static long getFileSize(byte[] data) {
         String parsedData = new String(data).replace("\0", "");
         long size = Long.parseLong(parsedData.substring(
                 parsedData.indexOf("/*/") + 3,
-                parsedData.indexOf("/&/"))
+                parsedData.length())
         );
         Logger.getLogger(Utils.class.getName()).log(
             Level.INFO,
@@ -136,95 +118,33 @@ public class Utils {
         return new Chunk(position, tempChunkFile.getAbsolutePath());
     }
     
-    public static ArrayList<Chunk> organizeChunks(ArrayList<Chunk> fileChunks){
+    public static boolean createFileByClientSocketId(String filePath,
+            ArrayList<Chunk> fileChunks) {
+        
         Comparator<Chunk> comparator = (Chunk c1, Chunk c2) ->
                 (new Integer(c1.getPosition())).compareTo(new Integer(c2.getPosition()));
         
         Collections.sort(fileChunks, comparator);
-        return fileChunks;
-    }
-    
-    public static ArrayList<Integer> getChunksPositions(ArrayList<Chunk> chunks){
-        ArrayList<Integer> chunksPositions = new ArrayList();
-        for (Chunk chunk: chunks)
-            chunksPositions.add(chunk.getPosition());
-        return chunksPositions;
-    }
-    
-    public static ArrayList<Integer> getMissingChunks(ArrayList<Chunk> fileChunks, long numberOfChunks) {
-        ArrayList<Integer> chunksPositions = getChunksPositions(fileChunks);
-        ArrayList<Integer> missingChunks = new ArrayList();
-        for (int i = 1; i <= numberOfChunks; i++) {
-            if (!chunksPositions.contains(i)) missingChunks.add(i);
-        }
-        return missingChunks;
-    }
-    
-    public static long getTotalChunks(ClientFile clientFile, int MTU) {
-        long totalChunks = (long) (Math.ceil(clientFile.getSize() / (MTU - 9)));
-        Logger.getLogger(UDPReceptor.class.getName()).log(Level.INFO,
-            "getTotalChunks => {0}", totalChunks);
-        return totalChunks;
-    }
-    
-    public static boolean createFileByClientSocketId(String filePath,
-            ArrayList<Chunk> fileChunks, long numberOfChunks) {
-        fileChunks = organizeChunks(fileChunks);
-        ArrayList<Integer> missingChunks = getMissingChunks(fileChunks, numberOfChunks);
-        
-        missingChunks.forEach((chunkpos) -> {
-            System.out.println("missing: " + chunkpos);
-        });
-        
-        for (Chunk chunk: fileChunks) {
-            System.out.println("pos: " + chunk.getPosition());
-        }
-//        System.out.println("fileChunks pos => " + fileChunks
-//                        .stream()
-//                        .map(v -> v.getPosition())
-//                        .collect(Collectors.toList()));
-        
-        if (missingChunks.isEmpty()){
-            try {
-                FileInputStream input;
-                FileOutputStream output;
-                output = new FileOutputStream(filePath, false);
-                for (int index = 0; index < fileChunks.size(); index++) {
-                    input = new FileInputStream(fileChunks.get(index).getFilePath());
-                    IOUtils.copy(input, output);
-                    IOUtils.closeQuietly(input);
-                }
-                IOUtils.closeQuietly(output);
-                Logger.getLogger(UDPReceptor.class.getName()).log(Level.INFO,
-                    "FINAL file created => {0}", filePath);
-                return true;
-            } catch (IOException ex) {
-                Logger.getLogger(Utils.class.getName()).log(Level.SEVERE, null, ex);
-                return false;
+        System.out.println("fileChunks => " + fileChunks
+                        .stream()
+                        .map(v -> v.getPosition())
+                        .collect(Collectors.toList()));
+        try {
+            FileInputStream input;
+            FileOutputStream output;
+            output = new FileOutputStream(filePath, false);
+            for (int index = 0; index < fileChunks.size(); index++) {
+                input = new FileInputStream(fileChunks.get(index).getFilePath());
+                IOUtils.copy(input, output);
+                IOUtils.closeQuietly(input);
             }
-        } else {
+            IOUtils.closeQuietly(output);
+            Logger.getLogger(UDPReceptor.class.getName()).log(Level.INFO,
+                "FINAL file created => {0}", filePath);
+            return true;
+        } catch (IOException ex) {
+            Logger.getLogger(Utils.class.getName()).log(Level.SEVERE, null, ex);
             return false;
         }
-    }
-    
-    public static byte[] getMissingChunksPositions(byte[] header, ClientFile clientFile, int MTU) {
-        ArrayList<Integer> missingChunks = getMissingChunks(clientFile.getChunks(), getTotalChunks(clientFile, MTU));
-        int payloadCounter = 9, index = 0;
-        byte [] finalArr = new byte[MTU];
-
-        System.arraycopy(header, 0, finalArr, 0, 8);
-
-        while (index < missingChunks.size()) {
-            if (payloadCounter >= MTU - 9) break;
-            byte[] parsedInt = intToByteArr(missingChunks.get(index));
-            System.arraycopy(parsedInt, 0, finalArr, payloadCounter, 4);
-            payloadCounter += 6;
-            index++;
-        }
-        
-        if (payloadCounter < MTU - 9)
-            Arrays.fill(finalArr, payloadCounter, MTU, (byte) 0);
-        
-        return finalArr;
     }
 }
