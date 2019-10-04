@@ -68,7 +68,7 @@ public class ConnectionManagement {
                 for(SharedFile sharedFile : fls) {
                     String filename = sharedFile.getName();
                     if (!checkIfFileExists(currentFiles, filename)) {
-                        currentFiles.add(server);
+                        currentFiles.add(filename);
                     }
                 }
             }
